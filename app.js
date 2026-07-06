@@ -3,41 +3,42 @@
 // ==============================
 
 // API Key
-const GOOGLE_ROUTES_API_KEY = "AIzaSyA9EP_wOYfkx3CCjc8DWZ69ObxhiOPhyMM";
+const GOOGLE_ROUTES_API_KEY = "YOUR_NEW_API_KEY";
 
+// ==============================
 // State
-// State
+// ==============================
 let map;
-let marker;
+let destinationMarker;
 let autocomplete;
-let selectedDestination = null;
 
 let currentLocationMarker = null;
 let currentAccuracyCircle = null;
 let locationWatchId = null;
 
+let selectedDestination = null;
 let routeResults = [];
 let selectedRouteIndex = 0;
 let routePolyline = null;
 
 let developerMode = false;
 
+const appState = {
+  screen: "HOME",
+  route: null,
+  destination: null,
+  currentLocation: null,
+  latestAccuracy: null,
+  locationReady: false
+};
+
 // ==============================
 // Map Style
 // ==============================
 const rideConsoleMapStyle = [
-  {
-    elementType: "geometry",
-    stylers: [{ color: "#1d1d1d" }]
-  },
-  {
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#b8b8b8" }]
-  },
-  {
-    elementType: "labels.text.stroke",
-    stylers: [{ color: "#1d1d1d" }]
-  },
+  { elementType: "geometry", stylers: [{ color: "#1d1d1d" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#b8b8b8" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#1d1d1d" }] },
   {
     featureType: "road",
     elementType: "geometry",
@@ -53,197 +54,20 @@ const rideConsoleMapStyle = [
     elementType: "geometry",
     stylers: [{ color: "#4a3a1a" }]
   },
-  {
-    featureType: "poi",
-    stylers: [{ visibility: "off" }]
-  },
-  {
-    featureType: "transit",
-    stylers: [{ visibility: "off" }]
-  },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
   {
     featureType: "water",
     elementType: "geometry",
     stylers: [{ color: "#0f1a22" }]
   }
 ];
-const appState = {
-    screen: "HOME",
-    route: null,
-    destination: null,
-    currentLocation: null,
-    latestAccuracy: null,
-    locationReady: false
-};
 
 // ==============================
 // Init
 // ==============================
 document.addEventListener("DOMContentLoaded", restoreDeveloperMode);
 
-
-// ==============================
-// UI
-// ==============================
-function showScreen(name) {
-  document.querySelectorAll(".screen").forEach(screen => {
-    screen.classList.remove("active");
-  });
-
-  const target = document.getElementById(`screen-${name}`);
-  if (target) {
-    target.classList.add("active");
-  }
-}
-
-function selectRouteOption(selectedButton) {
-  document.querySelectorAll(".route-option").forEach(button => {
-    button.classList.remove("selected");
-  });
-
-  selectedButton.classList.add("selected");
-}
-
-
-// ==============================
-// Developer Mode
-// ==============================
-function toggleDeveloperMode() {
-  developerMode = !developerMode;
-  document.body.classList.toggle("dev-mode", developerMode);
-  localStorage.setItem("rideConsoleDeveloperMode", developerMode ? "1" : "0");
-}
-
-function restoreDeveloperMode() {
-  developerMode = localStorage.getItem("rideConsoleDeveloperMode") === "1";
-  document.body.classList.toggle("dev-mode", developerMode);
-}
-
-function updateSearchDebug() {
-  const debugMap = document.getElementById("debugMapStatus");
-  const debugRoute = document.getElementById("debugRouteStatus");
-
-  if (debugMap) {
-    debugMap.textContent = "MAP: PLACE SELECTED";
-  }
-
-  if (debugRoute && selectedDestination) {
-    debugRoute.textContent = `DEST: ${selectedDestination.name}`;
-  }
-}
-
-
-function updateNaviDebug(selected) {
-  const debugPanels = document.querySelectorAll("#screen-navi .debug-panel div");
-
-  if (!debugPanels || debugPanels.length < 3) return;
-
-  debugPanels[1].textContent = `ROUTE: ${selected.type}`;
-  debugPanels[2].textContent = "SEND: READY";
-}
-
-// =====================================================
-// Location State
-// =====================================================
-
-let locationWatchId = null;
-let currentLocationMarker = null;
-let currentAccuracyCircle = null;
-
-function startLocationWatch() {
-    if (!navigator.geolocation) {
-        console.warn("Geolocation is not supported.");
-        showDevLog("GPS not supported");
-        return;
-    }
-
-    // 二重起動防止
-    if (locationWatchId !== null) {
-        console.log("Location watch already started.");
-        return;
-    }
-
-    locationWatchId = navigator.geolocation.watchPosition(
-        position => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const accuracy = position.coords.accuracy;
-
-            appState.currentLocation = { lat, lng };
-            appState.latestAccuracy = accuracy;
-            appState.locationReady = true;
-
-            updateCurrentLocationOnMap(lat, lng, accuracy);
-
-            showDevLog(
-                `GPS lat=${lat.toFixed(6)}, lng=${lng.toFixed(6)}, acc=${Math.round(accuracy)}m`
-            );
-        },
-        error => {
-            console.warn("GPS error:", error);
-
-            showDevLog(`GPS error: ${error.code} ${error.message}`);
-        },
-        {
-            enableHighAccuracy: true,
-            maximumAge: 1000,
-            timeout: 10000
-        }
-    );
-}
-
-// ==============================
-// Update current location
-// ==============================
-function updateCurrentLocationOnMap(lat, lng, accuracy) {
-    if (!map) {
-        console.warn("Map is not ready.");
-        return;
-    }
-
-    const pos = { lat, lng };
-
-    // 初回だけマーカー作成
-    if (!currentLocationMarker) {
-        currentLocationMarker = new google.maps.Marker({
-            position: pos,
-            map: map,
-            title: "Current Location",
-            icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 7,
-                fillColor: "#ffffff",
-                fillOpacity: 1,
-                strokeColor: "#000000",
-                strokeWeight: 2
-            }
-        });
-
-        map.setCenter(pos);
-        map.setZoom(17);
-    } else {
-        currentLocationMarker.setPosition(pos);
-    }
-
-    // 精度円
-    if (!currentAccuracyCircle) {
-        currentAccuracyCircle = new google.maps.Circle({
-            map: map,
-            center: pos,
-            radius: accuracy,
-            strokeOpacity: 0.4,
-            strokeWeight: 1,
-            fillOpacity: 0.08
-        });
-    } else {
-        currentAccuracyCircle.setCenter(pos);
-        currentAccuracyCircle.setRadius(accuracy);
-    }
-}
-
-// ==============================
-// Google Map
-// ==============================
 function initMap() {
   const defaultPosition = {
     lat: 35.681236,
@@ -261,16 +85,13 @@ function initMap() {
     styles: rideConsoleMapStyle
   });
 
-  marker = new google.maps.Marker({
-    position: defaultPosition,
-    map: map,
-    title: "Tokyo Station"
-  });
-
   setupAutocomplete();
-  
+  startLocationWatch();
 }
 
+// ==============================
+// Places Autocomplete
+// ==============================
 function setupAutocomplete() {
   const input = document.getElementById("destinationInput");
 
@@ -279,11 +100,18 @@ function setupAutocomplete() {
     return;
   }
 
+  if (!google.maps.places) {
+    console.error("Google Places library not loaded");
+    return;
+  }
+
   autocomplete = new google.maps.places.Autocomplete(input, {
     fields: ["place_id", "geometry", "name", "formatted_address"]
   });
 
   autocomplete.addListener("place_changed", () => {
+    console.log("PLACE CHANGED");
+
     const place = autocomplete.getPlace();
 
     if (!place.geometry || !place.geometry.location) {
@@ -299,33 +127,118 @@ function setupAutocomplete() {
 
     appState.destination = selectedDestination;
 
-    console.log("selectedDestination:", selectedDestination);
-
-    map.setCenter(selectedDestination);
-    map.setZoom(16);
-
-    if (!marker) {
-      marker = new google.maps.Marker({
-        map: map,
+    if (!destinationMarker) {
+      destinationMarker = new google.maps.Marker({
+        map,
         title: "Destination"
       });
     }
 
-    marker.setPosition(selectedDestination);
-    marker.setTitle(selectedDestination.name);
+    destinationMarker.setPosition(selectedDestination);
+    destinationMarker.setTitle(selectedDestination.name);
+
+    map.setCenter(selectedDestination);
+    map.setZoom(16);
+
+    updateSearchDebug();
   });
 }
 
-function clearRoute() {
-  if (routePolyline) {
-    routePolyline.setMap(null);
-    routePolyline = null;
+// ==============================
+// GPS
+// ==============================
+function startLocationWatch() {
+  if (!navigator.geolocation) {
+    console.warn("Geolocation is not supported.");
+    showDevLog("GPS not supported");
+    return;
   }
 
-  routeResults = [];
-  selectedRouteIndex = 0;
+  if (locationWatchId !== null) {
+    console.log("Location watch already started.");
+    return;
+  }
+
+  locationWatchId = navigator.geolocation.watchPosition(
+    position => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      const accuracy = position.coords.accuracy;
+
+      appState.currentLocation = { lat, lng };
+      appState.latestAccuracy = accuracy;
+      appState.locationReady = true;
+
+      updateCurrentLocationOnMap(lat, lng, accuracy);
+
+      showDevLog(
+        `GPS lat=${lat.toFixed(6)}, lng=${lng.toFixed(6)}, acc=${Math.round(accuracy)}m`
+      );
+    },
+    error => {
+      console.warn("GPS error:", error);
+      showDevLog(`GPS error: ${error.code} ${error.message}`);
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 1000,
+      timeout: 10000
+    }
+  );
 }
 
+function updateCurrentLocationOnMap(lat, lng, accuracy) {
+  if (!map) return;
+
+  const pos = { lat, lng };
+
+  if (!currentLocationMarker) {
+    currentLocationMarker = new google.maps.Marker({
+      position: pos,
+      map,
+      title: "Current Location",
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 7,
+        fillColor: "#ffffff",
+        fillOpacity: 1,
+        strokeColor: "#000000",
+        strokeWeight: 2
+      }
+    });
+
+    map.setCenter(pos);
+    map.setZoom(17);
+  } else {
+    currentLocationMarker.setPosition(pos);
+  }
+
+  if (!currentAccuracyCircle) {
+    currentAccuracyCircle = new google.maps.Circle({
+      map,
+      center: pos,
+      radius: accuracy,
+      strokeOpacity: 0.4,
+      strokeWeight: 1,
+      fillOpacity: 0.08
+    });
+  } else {
+    currentAccuracyCircle.setCenter(pos);
+    currentAccuracyCircle.setRadius(accuracy);
+  }
+}
+
+function getCurrentOrigin() {
+  if (appState.currentLocation) {
+    return appState.currentLocation;
+  }
+
+  // GPS未取得時のフォールバック：東京駅
+  return {
+    lat: 35.681236,
+    lng: 139.767125
+  };
+}
 
 // ==============================
 // Routes API
@@ -335,6 +248,8 @@ async function calculateRoutes() {
     alert("Please select destination.");
     return;
   }
+
+  clearRoute();
 
   const origin = getCurrentOrigin();
 
@@ -379,14 +294,6 @@ async function calculateRoutes() {
   selectedRouteIndex = 0;
   renderRouteCards();
   drawSelectedRoute(0);
-}
-
-function getCurrentOrigin() {
-  // TODO: GPS連携後は現在地に置き換える
-  return {
-    lat: 35.681236,
-    lng: 139.767125
-  };
 }
 
 async function fetchRoute({
@@ -457,20 +364,27 @@ async function fetchRoute({
     }
 
     return data.routes[0];
-
   } catch (error) {
     console.error("fetchRoute failed:", error);
     return null;
   }
 }
 
+// ==============================
+// Route Drawing
+// ==============================
+function clearRoute() {
+  if (routePolyline) {
+    routePolyline.setMap(null);
+    routePolyline = null;
+  }
 
-// ==============================
-// Route Cards
-// ==============================
+  routeResults = [];
+  selectedRouteIndex = 0;
+}
+
 function renderRouteCards() {
   const container = document.getElementById("routeOptions");
-
   if (!container) return;
 
   container.innerHTML = "";
@@ -480,7 +394,8 @@ function renderRouteCards() {
     const distance = formatDistance(item.route.distanceMeters);
 
     const button = document.createElement("button");
-    button.className = "route-option" + (index === selectedRouteIndex ? " selected" : "");
+    button.className =
+      "route-option" + (index === selectedRouteIndex ? " selected" : "");
 
     button.onclick = () => {
       selectedRouteIndex = index;
@@ -514,10 +429,13 @@ function renderRouteCards() {
 function drawSelectedRoute(index) {
   const item = routeResults[index];
 
-  console.log("drawSelectedRoute:", index, item);
-
   if (!item || !item.route || !item.route.polyline) {
     console.warn("No route polyline:", item);
+    return;
+  }
+
+  if (!google.maps.geometry || !google.maps.geometry.encoding) {
+    console.error("Google Maps geometry library not loaded");
     return;
   }
 
@@ -538,9 +456,17 @@ function drawSelectedRoute(index) {
 
   const bounds = new google.maps.LatLngBounds();
   path.forEach(point => bounds.extend(point));
+
+  if (appState.currentLocation) {
+    bounds.extend(appState.currentLocation);
+  }
+
+  if (selectedDestination) {
+    bounds.extend(selectedDestination);
+  }
+
   map.fitBounds(bounds);
 }
-
 
 // ==============================
 // Navigation
@@ -556,6 +482,8 @@ function startNavigation() {
   const duration = formatDuration(selected.route.duration);
   const distance = formatDistance(selected.route.distanceMeters);
 
+  appState.route = selected.route;
+
   setText("naviDistance", distance);
   setText("naviInstruction", selected.type);
   setText("naviRoad", selectedDestination?.name || "Navigation");
@@ -568,6 +496,74 @@ function startNavigation() {
   showScreen("navi");
 }
 
+// ==============================
+// UI
+// ==============================
+function showScreen(name) {
+  document.querySelectorAll(".screen").forEach(screen => {
+    screen.classList.remove("active");
+  });
+
+  const target = document.getElementById(`screen-${name}`);
+  if (target) {
+    target.classList.add("active");
+  }
+
+  appState.screen = name;
+}
+
+function selectRouteOption(selectedButton) {
+  document.querySelectorAll(".route-option").forEach(button => {
+    button.classList.remove("selected");
+  });
+
+  selectedButton.classList.add("selected");
+}
+
+// ==============================
+// Developer Mode
+// ==============================
+function toggleDeveloperMode() {
+  developerMode = !developerMode;
+  document.body.classList.toggle("dev-mode", developerMode);
+  localStorage.setItem("rideConsoleDeveloperMode", developerMode ? "1" : "0");
+}
+
+function restoreDeveloperMode() {
+  developerMode = localStorage.getItem("rideConsoleDeveloperMode") === "1";
+  document.body.classList.toggle("dev-mode", developerMode);
+}
+
+function updateSearchDebug() {
+  const debugMap = document.getElementById("debugMapStatus");
+  const debugRoute = document.getElementById("debugRouteStatus");
+
+  if (debugMap) {
+    debugMap.textContent = "MAP: PLACE SELECTED";
+  }
+
+  if (debugRoute && selectedDestination) {
+    debugRoute.textContent = `DEST: ${selectedDestination.name}`;
+  }
+}
+
+function updateNaviDebug(selected) {
+  const debugPanels = document.querySelectorAll("#screen-navi .debug-panel div");
+
+  if (!debugPanels || debugPanels.length < 3) return;
+
+  debugPanels[1].textContent = `ROUTE: ${selected.type}`;
+  debugPanels[2].textContent = "SEND: READY";
+}
+
+function showDevLog(text) {
+  console.log(text);
+
+  const debugGps = document.getElementById("debugGpsStatus");
+  if (debugGps) {
+    debugGps.textContent = text;
+  }
+}
 
 // ==============================
 // Utility
@@ -599,11 +595,8 @@ function setText(id, text) {
   }
 }
 
-
-
-
 // ==============================
-// Expose functions for HTML onclick / Google callback
+// Expose functions
 // ==============================
 window.initMap = initMap;
 window.showScreen = showScreen;
