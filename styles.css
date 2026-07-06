@@ -1,0 +1,398 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #050505;
+  color: #ffffff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans JP", sans-serif;
+}
+
+#app {
+  max-width: 430px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 14px;
+  background: radial-gradient(circle at top, #1a1a1a, #050505 55%);
+}
+
+.screen {
+  display: none;
+}
+
+.screen.active {
+  display: block;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.app-header h1 {
+  font-size: 24px;
+  color: #ffb000;
+  margin: 0;
+  font-weight: 700;
+}
+
+.icon-button {
+  background: transparent;
+  color: #ffffff;
+  border: none;
+  font-size: 26px;
+}
+
+.status-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.status-card {
+  background: #111111;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 12px 10px;
+  font-size: 14px;
+}
+
+.status-card span {
+  float: right;
+  color: #ffb000;
+  font-weight: 700;
+}
+
+.status-card .ok {
+  color: #4cd964;
+}
+
+.card,
+.route-card {
+  background: #111111;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+.label {
+  color: #aaaaaa;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.destination {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.sub {
+  color: #aaaaaa;
+  margin-top: 8px;
+}
+
+.search-box {
+  border: 1px solid #444444;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 22px;
+}
+
+.map-placeholder {
+  height: 240px;
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(255,176,0,0.18), transparent),
+    #151515;
+  border: 1px solid #2a2a2a;
+  color: #666666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  letter-spacing: 2px;
+}
+
+.route-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.route-card.selected {
+  border-color: #ffb000;
+  box-shadow: 0 0 18px rgba(255, 176, 0, 0.22);
+}
+
+.route-title {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.route-sub {
+  color: #cccccc;
+  margin-top: 6px;
+}
+
+.route-time {
+  color: #ffb000;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.primary-button,
+.accent-button,
+.danger-button {
+  width: 100%;
+  border-radius: 14px;
+  padding: 18px;
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 12px;
+}
+
+.primary-button {
+  background: #151515;
+  color: #ffffff;
+  border: 1px solid #444444;
+}
+
+.accent-button {
+  background: #ffb000;
+  color: #050505;
+  border: none;
+}
+
+.danger-button {
+  background: #220000;
+  color: #ff4b4b;
+  border: 1px solid #ff3333;
+}
+
+.navi-main {
+  background: #111111;
+  border: 1px solid #2a2a2a;
+  border-radius: 18px;
+  padding: 26px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 14px;
+}
+
+.turn-arrow {
+  color: #ffb000;
+  font-size: 96px;
+  line-height: 1;
+}
+
+.navi-distance {
+  color: #ffb000;
+  font-size: 56px;
+  font-weight: 800;
+}
+
+.navi-instruction {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.navi-road {
+  font-size: 20px;
+  color: #dddddd;
+}
+
+.navi-info-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: #0f0f0f;
+  border: 1px solid #2a2a2a;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.navi-info-row > div {
+  padding: 14px;
+  text-align: center;
+  border-right: 1px solid #2a2a2a;
+}
+
+.navi-info-row > div:last-child {
+  border-right: none;
+}
+
+.navi-map {
+  height: 300px;
+}
+
+.bottom-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.app-kicker {
+  color: #888;
+  font-size: 11px;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+
+.home-header h1 {
+  color: #ffb000;
+  font-size: 32px;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.round-button {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid #333;
+  background: rgba(255,255,255,0.04);
+  color: #fff;
+  font-size: 22px;
+}
+
+.hero-card {
+  border-radius: 24px;
+  padding: 22px;
+  margin-bottom: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(255,176,0,0.28), transparent 42%),
+    linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+}
+
+.hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 22px;
+}
+
+.hero-title {
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.pulse-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffb000;
+  box-shadow: 0 0 0 8px rgba(255,176,0,0.14);
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+
+.status-chip {
+  border-radius: 999px;
+  padding: 10px 8px;
+  text-align: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  font-size: 13px;
+  color: #bbb;
+}
+
+.status-chip strong {
+  color: #fff;
+  margin-left: 4px;
+}
+
+.status-chip.ok strong {
+  color: #4cd964;
+}
+
+.status-chip.off strong {
+  color: #ffb000;
+}
+
+.destination-card {
+  padding: 20px;
+}
+
+.big-start-button {
+  width: 100%;
+  border: none;
+  border-radius: 22px;
+  padding: 24px;
+  margin: 8px 0 14px;
+  background: linear-gradient(135deg, #ffb000, #ff7a00);
+  color: #050505;
+  font-weight: 900;
+  box-shadow: 0 18px 40px rgba(255,176,0,0.28);
+}
+
+.big-start-button span {
+  display: block;
+  font-size: 22px;
+  letter-spacing: 1px;
+}
+
+.big-start-button small {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.secondary-action {
+  border-radius: 16px;
+  padding: 17px 10px;
+  background: #121212;
+  color: #fff;
+  border: 1px solid #333;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.bike-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid #292929;
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.bike-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.bike-values {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #ffb000;
+  font-weight: 700;
+  text-align: right;
+}
