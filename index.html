@@ -69,82 +69,70 @@
   </div>
 </section>
 
-    <!-- MAP -->
-    <section id="screen-map" class="screen">
-      <header class="app-header">
-        <button class="icon-button" onclick="showScreen('home')">‹</button>
-        <h1>目的地設定</h1>
-        <button class="icon-button">⚙</button>
-      </header>
+<!-- MAP -->
+<section id="screen-map" class="screen">
+  <header class="map-header">
+    <button class="round-button" onclick="showScreen('home')">‹</button>
+    <div>
+      <div class="app-kicker">ROUTE PLANNER</div>
+      <h1>Map</h1>
+    </div>
+    <button class="round-button">⋯</button>
+  </header>
 
-      <div class="card">
-        <div class="label">目的地</div>
-        <div class="search-box">📍 新宿駅　🔍</div>
+  <div class="search-card">
+    <div class="label">DESTINATION</div>
+    <div class="search-input">
+      <span>🔍</span>
+      <input id="destinationInput" type="text" placeholder="Search destination..." value="新宿駅">
+    </div>
+  </div>
+
+  <div id="map" class="map-panel">
+    <div class="map-overlay">
+      <div class="map-title">LIVE MAP</div>
+      <div class="map-sub">Route preview</div>
+    </div>
+  </div>
+
+  <div class="route-section-header">
+    <div>
+      <div class="label">ROUTES</div>
+      <div class="section-title">Choose your ride</div>
+    </div>
+    <button class="small-link-button">REFRESH</button>
+  </div>
+
+  <div class="route-options">
+    <button class="route-option selected" onclick="selectRouteOption(this)">
+      <div class="route-option-top">
+        <div class="route-name">LOCAL</div>
+        <div class="route-badge">NO TOLL</div>
       </div>
-
-      <div class="map-placeholder">
-        MAP AREA
+      <div class="route-main">38 min</div>
+      <div class="route-meta">
+        <span>12.4 km</span>
+        <span>Free</span>
       </div>
+    </button>
 
-      <div class="route-card selected">
-        <div>
-          <div class="route-title">下道優先</div>
-          <div class="route-sub">12.4 km / ¥0</div>
-        </div>
-        <div class="route-time">38分</div>
+    <button class="route-option" onclick="selectRouteOption(this)">
+      <div class="route-option-top">
+        <div class="route-name">EXPRESS</div>
+        <div class="route-badge express">FAST</div>
       </div>
-
-      <div class="route-card">
-        <div>
-          <div class="route-title">高速優先</div>
-          <div class="route-sub">18.1 km / ¥630</div>
-        </div>
-        <div class="route-time">24分</div>
+      <div class="route-main">24 min</div>
+      <div class="route-meta">
+        <span>18.1 km</span>
+        <span>¥630</span>
       </div>
+    </button>
+  </div>
 
-      <button class="accent-button" onclick="showScreen('navi')">
-        案内開始
-      </button>
-    </section>
-
-    <!-- NAVI -->
-    <section id="screen-navi" class="screen">
-      <div class="navi-main">
-        <div class="turn-arrow">↱</div>
-        <div>
-          <div class="navi-distance">460m</div>
-          <div class="navi-instruction">右折</div>
-          <div class="navi-road">甲州街道</div>
-        </div>
-      </div>
-
-      <div class="navi-info-row">
-        <div>
-          <div class="label">次の案内</div>
-          <div>↑ 左折</div>
-        </div>
-        <div>
-          <div class="label">残り距離</div>
-          <div>18.1km</div>
-        </div>
-        <div>
-          <div class="label">到着予想</div>
-          <div>11:08</div>
-        </div>
-      </div>
-
-      <div class="map-placeholder navi-map">
-        ROUTE MAP
-      </div>
-
-      <div class="bottom-buttons">
-        <button class="primary-button">一時停止</button>
-        <button class="danger-button" onclick="showScreen('home')">
-          案内終了
-        </button>
-      </div>
-    </section>
-
+  <button class="map-start-button" onclick="showScreen('navi')">
+    START
+  </button>
+</section>
   </div>
 
   <script src="app.js"></script>
