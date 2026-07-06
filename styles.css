@@ -646,3 +646,8 @@ body.dev-mode .round-button {
   pointer-events: none;
   z-index: 2;
 }
+window.showScreen = showScreen;
+window.toggleDeveloperMode = toggleDeveloperMode;
+window.selectRouteOption = selectRouteOption;
+window.calculateRoutes = calculateRoutes;
+window.initMap = initMap;
