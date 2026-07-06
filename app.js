@@ -5,3 +5,10 @@ function showScreen(name) {
 
   document.getElementById(`screen-${name}`).classList.add("active");
 }
+function selectRouteOption(selectedButton) {
+  document.querySelectorAll(".route-option").forEach(button => {
+    button.classList.remove("selected");
+  });
+
+  selectedButton.classList.add("selected");
+}
