@@ -177,7 +177,10 @@ async function calculateRoutes() {
     return;
   }
 
-  const origin = map.getCenter();
+  const origin = {
+    lat: () => 35.681236,
+    lng: () => 139.767125
+  };
 
   const localRoute = await fetchRoute({
     originLat: origin.lat(),
