@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ride Console</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div id="app">
+
+    <!-- HOME -->
+    <section id="screen-home" class="screen active">
+      <header class="app-header">
+        <button class="icon-button">☰</button>
+        <h1>Ride Console</h1>
+        <button class="icon-button">⚙</button>
+      </header>
+
+      <div class="status-row">
+        <div class="status-card">GPS <span class="ok">OK</span></div>
+        <div class="status-card">BLE <span>OFF</span></div>
+        <div class="status-card">電源 <span>12.6V</span></div>
+      </div>
+
+      <div class="card">
+        <div class="label">前回目的地</div>
+        <div class="destination">新宿駅</div>
+        <div class="sub">到着予想 11:08</div>
+      </div>
+
+      <button class="primary-button" onclick="showScreen('map')">
+        目的地変更
+      </button>
+
+      <button class="accent-button" onclick="showScreen('navi')">
+        ▲ 案内開始
+      </button>
+    </section>
+
+    <!-- MAP -->
+    <section id="screen-map" class="screen">
+      <header class="app-header">
+        <button class="icon-button" onclick="showScreen('home')">‹</button>
+        <h1>目的地設定</h1>
+        <button class="icon-button">⚙</button>
+      </header>
+
+      <div class="card">
+        <div class="label">目的地</div>
+        <div class="search-box">📍 新宿駅　🔍</div>
+      </div>
+
+      <div class="map-placeholder">
+        MAP AREA
+      </div>
+
+      <div class="route-card selected">
+        <div>
+          <div class="route-title">下道優先</div>
+          <div class="route-sub">12.4 km / ¥0</div>
+        </div>
+        <div class="route-time">38分</div>
+      </div>
+
+      <div class="route-card">
+        <div>
+          <div class="route-title">高速優先</div>
+          <div class="route-sub">18.1 km / ¥630</div>
+        </div>
+        <div class="route-time">24分</div>
+      </div>
+
+      <button class="accent-button" onclick="showScreen('navi')">
+        案内開始
+      </button>
+    </section>
+
+    <!-- NAVI -->
+    <section id="screen-navi" class="screen">
+      <div class="navi-main">
+        <div class="turn-arrow">↱</div>
+        <div>
+          <div class="navi-distance">460m</div>
+          <div class="navi-instruction">右折</div>
+          <div class="navi-road">甲州街道</div>
+        </div>
+      </div>
+
+      <div class="navi-info-row">
+        <div>
+          <div class="label">次の案内</div>
+          <div>↑ 左折</div>
+        </div>
+        <div>
+          <div class="label">残り距離</div>
+          <div>18.1km</div>
+        </div>
+        <div>
+          <div class="label">到着予想</div>
+          <div>11:08</div>
+        </div>
+      </div>
+
+      <div class="map-placeholder navi-map">
+        ROUTE MAP
+      </div>
+
+      <div class="bottom-buttons">
+        <button class="primary-button">一時停止</button>
+        <button class="danger-button" onclick="showScreen('home')">
+          案内終了
+        </button>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
