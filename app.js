@@ -16,6 +16,57 @@ let selectedRouteIndex = 0;
 let routePolyline = null;
 
 let developerMode = false;
+// ==============================
+// Map Style
+// ==============================
+const rideConsoleMapStyle = [
+  {
+    elementType: "geometry",
+    stylers: [{ color: "#1d1d1d" }]
+  },
+  {
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#b8b8b8" }]
+  },
+  {
+    elementType: "labels.text.stroke",
+    stylers: [{ color: "#1d1d1d" }]
+  },
+  {
+    featureType: "road",
+    elementType: "geometry",
+    stylers: [{ color: "#3a3a3a" }]
+  },
+  {
+    featureType: "road",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#111111" }]
+  },
+  {
+    featureType: "road.highway",
+    elementType: "geometry",
+    stylers: [{ color: "#4a3a1a" }]
+  },
+  {
+    featureType: "poi",
+    stylers: [{ visibility: "off" }]
+  },
+  {
+    featureType: "transit",
+    stylers: [{ visibility: "off" }]
+  },
+  {
+    featureType: "water",
+    elementType: "geometry",
+    stylers: [{ color: "#0f1a22" }]
+  }
+];
+
+
+// ==============================
+// Init
+// ==============================
+document.addEventListener("DOMContentLoaded", restoreDeveloperMode);
 
 
 // ==============================
@@ -540,57 +591,6 @@ function setText(id, text) {
 }
 
 
-// ==============================
-// Map Style
-// ==============================
-const rideConsoleMapStyle = [
-  {
-    elementType: "geometry",
-    stylers: [{ color: "#1d1d1d" }]
-  },
-  {
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#b8b8b8" }]
-  },
-  {
-    elementType: "labels.text.stroke",
-    stylers: [{ color: "#1d1d1d" }]
-  },
-  {
-    featureType: "road",
-    elementType: "geometry",
-    stylers: [{ color: "#3a3a3a" }]
-  },
-  {
-    featureType: "road",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#111111" }]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry",
-    stylers: [{ color: "#4a3a1a" }]
-  },
-  {
-    featureType: "poi",
-    stylers: [{ visibility: "off" }]
-  },
-  {
-    featureType: "transit",
-    stylers: [{ visibility: "off" }]
-  },
-  {
-    featureType: "water",
-    elementType: "geometry",
-    stylers: [{ color: "#0f1a22" }]
-  }
-];
-
-
-// ==============================
-// Init
-// ==============================
-document.addEventListener("DOMContentLoaded", restoreDeveloperMode);
 
 
 // ==============================
