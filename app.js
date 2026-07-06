@@ -273,7 +273,12 @@ async function fetchRoute({
     alert("Route search failed.");
     return null;
   }
-
+if (!response.ok) {
+  const errorText = await response.text();
+  console.error("Routes API error:", errorText);
+  alert("Route search failed.");
+  return null;
+}
   const data = await response.json();
 
   if (!data.routes || data.routes.length === 0) {
@@ -342,7 +347,12 @@ function formatDistance(meters) {
   return `${meters} m`;
 }
 
+
 function drawSelectedRoute(index) {
+
+　 console.log("drawSelectedRoute index:", index);
+  console.log("routeResults:", routeResults);
+
   const item = routeResults[index];
 
   if (!item || !item.route || !item.route.polyline) return;
