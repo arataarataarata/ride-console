@@ -1,4 +1,7 @@
 let map;
+let marker;
+let autocomplete;
+let selectedDestination = null;
 let mapInitialized = false;
 
 function initMap() {
@@ -6,31 +9,84 @@ function initMap() {
     lat: 35.681236,
     lng: 139.767125
   };
+  
+function setupAutocomplete() {
+  const input = document.getElementById("destinationInput");
 
-    map = new google.maps.Map(document.getElementById("map"), {
+  if (!input) {
+    console.warn("destinationInput not found");
+    return;
+  }
+
+  autocomplete = new google.maps.places.Autocomplete(input, {
+    fields: ["place_id", "geometry", "name", "formatted_address"],
+    componentRestrictions: { country: "jp" }
+  });
+
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace();
+
+    if (!place.geometry || !place.geometry.location) {
+      console.warn("No geometry for selected place");
+      return;
+    }
+
+    selectedDestination = {
+      placeId: place.place_id,
+      name: place.name,
+      address: place.formatted_address,
+      lat: place.geometry.location.lat(),
+      lng: place.geometry.location.lng()
+    };
+
+    map.setCenter(place.geometry.location);
+    map.setZoom(15);
+
+    marker.setPosition(place.geometry.location);
+    marker.setTitle(place.name || "Destination");
+
+    updateSearchDebug();
+  });
+}
+
+function updateSearchDebug() {
+  const debugMap = document.getElementById("debugMapStatus");
+  const debugRoute = document.getElementById("debugRouteStatus");
+
+  if (debugMap) {
+    debugMap.textContent = `MAP: PLACE SELECTED`;
+  }
+
+  if (debugRoute && selectedDestination) {
+    debugRoute.textContent = `DEST: ${selectedDestination.name}`;
+  }
+}
+  
+  map = new google.maps.Map(document.getElementById("map"), {
     center: defaultPosition,
     zoom: 14,
     mapTypeControl: false,
     streetViewControl: false,
     fullscreenControl: false,
-    cameraControl: false,
     zoomControl: false,
     gestureHandling: "greedy",
     styles: rideConsoleMapStyle
   });
 
-  new google.maps.Marker({
+  marker = new google.maps.Marker({
     position: defaultPosition,
     map: map,
     title: "Tokyo Station"
   });
+
+  setupAutocomplete();
 
   mapInitialized = true;
 }
 
 window.initMap = initMap;
 
-  function showScreen(name) {
+function showScreen(name) {
   document.querySelectorAll(".screen").forEach(screen => {
     screen.classList.remove("active");
   });
