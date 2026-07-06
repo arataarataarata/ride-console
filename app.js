@@ -61,7 +61,14 @@ const rideConsoleMapStyle = [
     stylers: [{ color: "#0f1a22" }]
   }
 ];
-
+const appState = {
+    screen: "HOME",
+    route: null,
+    destination: null,
+    currentLocation: null,
+    latestAccuracy: null,
+    locationReady: false
+};
 
 // ==============================
 // Init
@@ -136,10 +143,6 @@ function updateNaviDebug(selected) {
 let locationWatchId = null;
 let currentLocationMarker = null;
 let currentAccuracyCircle = null;
-
-appState.currentLocation = null;
-appState.latestAccuracy = null;
-appState.locationReady = false;
 
 function startLocationWatch() {
     if (!navigator.geolocation) {
