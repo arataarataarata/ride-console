@@ -138,19 +138,57 @@
   <button class="map-start-button" onclick="showScreen('navi')">
     START
   </button>
-
-  <div class="debug-panel">
-  <div>MODE: DEV</div>
-  <div>GPS: OK / ±--m</div>
-  <div>BLE: OFF</div>
-</div>
-  
+ 
 <div class="debug-panel">
   <div>MODE: DEV</div>
   <div>MAP: MOCK</div>
   <div>ROUTE: LOCAL</div>
 </div>
 </section>
+<!-- NAVI -->
+<section id="screen-navi" class="screen">
+  <div class="navi-main">
+    <div class="turn-arrow">↱</div>
+    <div>
+      <div class="navi-distance">460m</div>
+      <div class="navi-instruction">右折</div>
+      <div class="navi-road">甲州街道</div>
+    </div>
+  </div>
+
+  <div class="navi-info-row">
+    <div>
+      <div class="label">NEXT</div>
+      <div>↑ LEFT</div>
+    </div>
+    <div>
+      <div class="label">DISTANCE</div>
+      <div>18.1km</div>
+    </div>
+    <div>
+      <div class="label">ETA</div>
+      <div>11:08</div>
+    </div>
+  </div>
+
+  <div class="map-placeholder navi-map">
+    ROUTE MAP
+  </div>
+
+  <div class="bottom-buttons">
+    <button class="primary-button">PAUSE</button>
+    <button class="danger-button" onclick="showScreen('home')">
+      END
+    </button>
+  </div>
+
+  <div class="debug-panel">
+    <div>MODE: DEV</div>
+    <div>STEP: --</div>
+    <div>SEND: 1,460m,2</div>
+  </div>
+</section>
+    
   </div>
 
   <script src="app.js"></script>
