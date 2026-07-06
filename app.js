@@ -1,11 +1,3 @@
-function showScreen(name) {
-  document.querySelectorAll(".screen").forEach(screen => {
-    screen.classList.remove("active");
-  });
-
-  document.getElementById(`screen-${name}`).classList.add("active");
-}
-
 let map;
 let mapInitialized = false;
 
@@ -15,7 +7,7 @@ function initMap() {
     lng: 139.767125
   };
 
-  map = new google.maps.Map(document.getElementById("map"), {
+    map = new google.maps.Map(document.getElementById("map"), {
     center: defaultPosition,
     zoom: 14,
     mapTypeControl: false,
@@ -35,6 +27,22 @@ function initMap() {
 
   mapInitialized = true;
 }
+
+window.initMap = initMap;
+
+  function showScreen(name) {
+  document.querySelectorAll(".screen").forEach(screen => {
+    screen.classList.remove("active");
+  });
+
+  document.getElementById(`screen-${name}`).classList.add("active");
+}
+
+
+
+
+
+
 
 const rideConsoleMapStyle = [
   {
