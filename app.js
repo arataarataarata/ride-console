@@ -6,16 +6,22 @@
 const GOOGLE_ROUTES_API_KEY = "AIzaSyA9EP_wOYfkx3CCjc8DWZ69ObxhiOPhyMM";
 
 // State
+// State
 let map;
 let marker;
 let autocomplete;
 let selectedDestination = null;
+
+let currentLocationMarker = null;
+let currentAccuracyCircle = null;
+let locationWatchId = null;
 
 let routeResults = [];
 let selectedRouteIndex = 0;
 let routePolyline = null;
 
 let developerMode = false;
+
 // ==============================
 // Map Style
 // ==============================
