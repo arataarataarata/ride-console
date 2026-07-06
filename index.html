@@ -10,34 +10,63 @@
 <body>
   <div id="app">
 
-    <!-- HOME -->
-    <section id="screen-home" class="screen active">
-      <header class="app-header">
-        <button class="icon-button">☰</button>
-        <h1>Ride Console</h1>
-        <button class="icon-button">⚙</button>
-      </header>
+<!-- HOME -->
+<section id="screen-home" class="screen active">
+  <header class="home-header">
+    <div>
+      <div class="app-kicker">HARLEY DIGITAL COCKPIT</div>
+      <h1>Ride Console</h1>
+    </div>
+    <button class="round-button">⚙</button>
+  </header>
 
-      <div class="status-row">
-        <div class="status-card">GPS <span class="ok">OK</span></div>
-        <div class="status-card">BLE <span>OFF</span></div>
-        <div class="status-card">電源 <span>12.6V</span></div>
+  <div class="hero-card">
+    <div class="hero-top">
+      <div>
+        <div class="label">SYSTEM STATUS</div>
+        <div class="hero-title">Ready to Ride</div>
       </div>
+      <div class="pulse-dot"></div>
+    </div>
 
-      <div class="card">
-        <div class="label">前回目的地</div>
-        <div class="destination">新宿駅</div>
-        <div class="sub">到着予想 11:08</div>
-      </div>
+    <div class="status-grid">
+      <div class="status-chip ok">GPS <strong>OK</strong></div>
+      <div class="status-chip off">BLE <strong>OFF</strong></div>
+      <div class="status-chip ok">MAP <strong>OK</strong></div>
+    </div>
+  </div>
 
-      <button class="primary-button" onclick="showScreen('map')">
-        目的地変更
-      </button>
+  <div class="card destination-card">
+    <div class="label">LAST DESTINATION</div>
+    <div class="destination">新宿駅</div>
+    <div class="sub">前回ルートを使用できます</div>
+  </div>
 
-      <button class="accent-button" onclick="showScreen('navi')">
-        ▲ 案内開始
-      </button>
-    </section>
+  <button class="big-start-button" onclick="showScreen('navi')">
+    <span>START NAVIGATION</span>
+    <small>案内開始</small>
+  </button>
+
+  <div class="action-row">
+    <button class="secondary-action" onclick="showScreen('map')">
+      目的地変更
+    </button>
+    <button class="secondary-action">
+      BLE接続
+    </button>
+  </div>
+
+  <div class="bike-card">
+    <div>
+      <div class="label">BIKE</div>
+      <div class="bike-name">XLH1200 Shovelhead</div>
+    </div>
+    <div class="bike-values">
+      <span>12.6V</span>
+      <span>Oil --°C</span>
+    </div>
+  </div>
+</section>
 
     <!-- MAP -->
     <section id="screen-map" class="screen">
