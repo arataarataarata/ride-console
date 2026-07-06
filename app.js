@@ -279,13 +279,8 @@ function setupAutocomplete() {
     return;
   }
 
-  if (!google.maps.places) {
-    console.error("Google Places library not loaded");
-    return;
-  }
-
   autocomplete = new google.maps.places.Autocomplete(input, {
-    fields: ["place_id", "geometry", "name", "formatted_address"],
+    fields: ["place_id", "geometry", "name", "formatted_address"]
   });
 
   autocomplete.addListener("place_changed", () => {
@@ -296,14 +291,17 @@ function setupAutocomplete() {
       return;
     }
 
-    destination = {
+    selectedDestination = {
       lat: place.geometry.location.lat(),
-      lng: place.geometry.location.lng()
+      lng: place.geometry.location.lng(),
+      name: place.name || place.formatted_address || "Destination"
     };
 
-    console.log("Destination selected:", destination, place.name);
+    appState.destination = selectedDestination;
 
-    map.setCenter(destination);
+    console.log("selectedDestination:", selectedDestination);
+
+    map.setCenter(selectedDestination);
     map.setZoom(16);
 
     if (!marker) {
@@ -313,7 +311,8 @@ function setupAutocomplete() {
       });
     }
 
-    marker.setPosition(destination);
+    marker.setPosition(selectedDestination);
+    marker.setTitle(selectedDestination.name);
   });
 }
 
