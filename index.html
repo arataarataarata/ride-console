@@ -135,8 +135,8 @@
     </button>
   </div>
 
-  <button class="map-start-button" onclick="showScreen('navi')">
-    START
+　<button class="map-start-button" onclick="startNavigation()">
+  START
   </button>
 
 <div class="debug-panel">
@@ -150,25 +150,25 @@
   <div class="navi-main">
     <div class="turn-arrow">↱</div>
     <div>
-      <div class="navi-distance">460m</div>
-      <div class="navi-instruction">右折</div>
-      <div class="navi-road">甲州街道</div>
+　  <div class="navi-distance" id="naviDistance">460m</div>
+　　<div class="navi-instruction" id="naviInstruction">RIGHT</div>
+　　<div class="navi-road" id="naviRoad">Route ready</div>
     </div>
   </div>
 
   <div class="navi-info-row">
-    <div>
-      <div class="label">NEXT</div>
-      <div>↑ LEFT</div>
-    </div>
-    <div>
-      <div class="label">DISTANCE</div>
-      <div>18.1km</div>
-    </div>
-    <div>
-      <div class="label">ETA</div>
-      <div>11:08</div>
-    </div>
+　<div>
+  　<div class="label">NEXT</div>
+  　<div id="naviNext">--</div>
+　</div>
+　<div>
+  　<div class="label">DISTANCE</div>
+  　<div id="naviTotalDistance">--</div>
+　</div>
+　<div>
+  　<div class="label">ETA</div>
+  　<div id="naviEta">--</div>
+　</div>
   </div>
 
   <div class="map-placeholder navi-map">
