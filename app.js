@@ -119,6 +119,7 @@ function updateSearchDebug() {
   }
 }
 
+
 function updateNaviDebug(selected) {
   const debugPanels = document.querySelectorAll("#screen-navi .debug-panel div");
 
