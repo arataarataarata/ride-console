@@ -77,6 +77,108 @@ function updateNaviDebug(selected) {
   debugPanels[2].textContent = "SEND: READY";
 }
 
+// =====================================================
+// Location State
+// =====================================================
+
+let locationWatchId = null;
+let currentLocationMarker = null;
+let currentAccuracyCircle = null;
+
+appState.currentLocation = null;
+appState.latestAccuracy = null;
+appState.locationReady = false;
+
+function startLocationWatch() {
+    if (!navigator.geolocation) {
+        console.warn("Geolocation is not supported.");
+        showDevLog("GPS not supported");
+        return;
+    }
+
+    // 二重起動防止
+    if (locationWatchId !== null) {
+        console.log("Location watch already started.");
+        return;
+    }
+
+    locationWatchId = navigator.geolocation.watchPosition(
+        position => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+
+            appState.currentLocation = { lat, lng };
+            appState.latestAccuracy = accuracy;
+            appState.locationReady = true;
+
+            updateCurrentLocationOnMap(lat, lng, accuracy);
+
+            showDevLog(
+                `GPS lat=${lat.toFixed(6)}, lng=${lng.toFixed(6)}, acc=${Math.round(accuracy)}m`
+            );
+        },
+        error => {
+            console.warn("GPS error:", error);
+
+            showDevLog(`GPS error: ${error.code} ${error.message}`);
+        },
+        {
+            enableHighAccuracy: true,
+            maximumAge: 1000,
+            timeout: 10000
+        }
+    );
+}
+
+// ==============================
+// Update current location
+// ==============================
+function updateCurrentLocationOnMap(lat, lng, accuracy) {
+    if (!map) {
+        console.warn("Map is not ready.");
+        return;
+    }
+
+    const pos = { lat, lng };
+
+    // 初回だけマーカー作成
+    if (!currentLocationMarker) {
+        currentLocationMarker = new google.maps.Marker({
+            position: pos,
+            map: map,
+            title: "Current Location",
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 7,
+                fillColor: "#ffffff",
+                fillOpacity: 1,
+                strokeColor: "#000000",
+                strokeWeight: 2
+            }
+        });
+
+        map.setCenter(pos);
+        map.setZoom(17);
+    } else {
+        currentLocationMarker.setPosition(pos);
+    }
+
+    // 精度円
+    if (!currentAccuracyCircle) {
+        currentAccuracyCircle = new google.maps.Circle({
+            map: map,
+            center: pos,
+            radius: accuracy,
+            strokeOpacity: 0.4,
+            strokeWeight: 1,
+            fillOpacity: 0.08
+        });
+    } else {
+        currentAccuracyCircle.setCenter(pos);
+        currentAccuracyCircle.setRadius(accuracy);
+    }
+}
 
 // ==============================
 // Google Map
@@ -105,6 +207,7 @@ function initMap() {
   });
 
   setupAutocomplete();
+  
 }
 
 function setupAutocomplete() {
