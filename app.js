@@ -214,39 +214,45 @@ function setupAutocomplete() {
   const input = document.getElementById("destinationInput");
 
   if (!input) {
-    console.warn("destinationInput not found");
+    console.error("destinationInput not found");
+    return;
+  }
+
+  if (!google.maps.places) {
+    console.error("Google Places library not loaded");
     return;
   }
 
   autocomplete = new google.maps.places.Autocomplete(input, {
     fields: ["place_id", "geometry", "name", "formatted_address"],
-    componentRestrictions: { country: "jp" }
   });
 
   autocomplete.addListener("place_changed", () => {
     const place = autocomplete.getPlace();
 
     if (!place.geometry || !place.geometry.location) {
-      console.warn("No geometry for selected place");
+      console.warn("No geometry for selected place:", place);
       return;
     }
 
-    selectedDestination = {
-      placeId: place.place_id,
-      name: place.name,
-      address: place.formatted_address,
+    destination = {
       lat: place.geometry.location.lat(),
       lng: place.geometry.location.lng()
     };
 
-    map.setCenter(place.geometry.location);
-    map.setZoom(15);
+    console.log("Destination selected:", destination, place.name);
 
-    marker.setPosition(place.geometry.location);
-    marker.setTitle(place.name || "Destination");
+    map.setCenter(destination);
+    map.setZoom(16);
 
-    clearRoute();
-    updateSearchDebug();
+    if (!marker) {
+      marker = new google.maps.Marker({
+        map: map,
+        title: "Destination"
+      });
+    }
+
+    marker.setPosition(destination);
   });
 }
 
