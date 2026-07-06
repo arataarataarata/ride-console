@@ -376,3 +376,37 @@ function drawSelectedRoute(index) {
   path.forEach(point => bounds.extend(point));
   map.fitBounds(bounds);
 }
+function startNavigation() {
+  const selected = routeResults[selectedRouteIndex];
+
+  if (!selected || !selected.route) {
+    alert("Please select route.");
+    return;
+  }
+
+  const duration = formatDuration(selected.route.duration);
+  const distance = formatDistance(selected.route.distanceMeters);
+
+  document.getElementById("naviDistance").textContent = distance;
+  document.getElementById("naviInstruction").textContent = selected.type;
+  document.getElementById("naviRoad").textContent = selectedDestination?.name || "Navigation";
+
+  document.getElementById("naviNext").textContent = "READY";
+  document.getElementById("naviTotalDistance").textContent = distance;
+  document.getElementById("naviEta").textContent = duration;
+
+  updateNaviDebug(selected);
+
+  showScreen("navi");
+}
+
+function updateNaviDebug(selected) {
+  const debugPanels = document.querySelectorAll("#screen-navi .debug-panel div");
+
+  if (!debugPanels || debugPanels.length < 3) return;
+
+  debugPanels[1].textContent = `ROUTE: ${selected.type}`;
+  debugPanels[2].textContent = `SEND: READY`;
+}
+
+window.startNavigation = startNavigation;
