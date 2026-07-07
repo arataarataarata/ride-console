@@ -31,7 +31,9 @@ const appState = {
   latestAccuracy: null,
   locationReady: false,
   currentStepIndex: 0,
-  currentStepRemainMeters: null
+  currentStepRemainMeters: null,
+  offRouteCount: 0,
+  routeDeviationMeters: null
 };
 // ==============================
 // arrow
@@ -236,6 +238,7 @@ function startLocationWatch() {
 
       updateCurrentLocationOnMap(lat, lng, accuracy);
       updateCurrentStep();
+      checkRouteDeviation();
       
       showDevLog(
         `GPS lat=${lat.toFixed(6)}, lng=${lng.toFixed(6)}, acc=${Math.round(accuracy)}m`
@@ -626,6 +629,61 @@ function updateNaviStepDisplay() {
     currentStep?.navigationInstruction?.instructions || "";
 
   setText("naviInstruction", instruction);
+}
+
+// ==============================
+// re-route
+// ==============================
+function checkRouteDeviation() {
+  if (!appState.route || !appState.currentLocation) {
+    return;
+  }
+
+  if (!appState.route.polyline?.encodedPolyline) {
+    return;
+  }
+
+  const path = google.maps.geometry.encoding.decodePath(
+    appState.route.polyline.encodedPolyline
+  );
+
+  if (!path || path.length < 2) {
+    return;
+  }
+
+  let minDistance = Infinity;
+
+  path.forEach(point => {
+    const p = latLngToPlain(point);
+    const d = getDistanceMeters(appState.currentLocation, p);
+
+    if (d < minDistance) {
+      minDistance = d;
+    }
+  });
+
+  appState.routeDeviationMeters = Math.round(minDistance);
+
+  const accuracy = appState.latestAccuracy || 0;
+  const threshold = accuracy + 10;
+
+  const isOffRoute = minDistance > threshold;
+
+  if (isOffRoute) {
+    appState.offRouteCount += 1;
+  } else {
+    appState.offRouteCount = 0;
+  }
+
+  console.table([
+    {
+      deviation: Math.round(minDistance),
+      accuracy: Math.round(accuracy),
+      threshold: Math.round(threshold),
+      offRoute: isOffRoute,
+      offRouteCount: appState.offRouteCount
+    }
+  ]);
 }
 // ==============================
 // UI
