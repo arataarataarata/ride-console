@@ -668,6 +668,12 @@ function updateNaviStepDisplay() {
     currentStep?.navigationInstruction?.instructions || "";
 
   setText("naviInstruction", instruction);
+ 
+  if(BLE.isEnabled()){
+    BLE.sendNavigation(
+        `${arrow1}|${distance}|${arrow2}|${maneuver}|${line2}`
+    );
+}
 }
 
 // ==============================
