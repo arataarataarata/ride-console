@@ -116,7 +116,7 @@ function initMap() {
   });
 
   setupAutocomplete();
-  cationWatch();
+  startLocationWatch();
 }
 
 // ==============================
