@@ -767,6 +767,9 @@ function showScreen(name) {
   }
 
   appState.screen = name;
+  if (name === "dev") {
+    updateDevScreen();
+  }
 }
 
 function selectRouteOption(selectedButton) {
@@ -780,6 +783,83 @@ function selectRouteOption(selectedButton) {
 // ==============================
 // Developer Mode
 // ==============================
+function updateDevScreen() {
+  const steps = appState.route ? getRouteSteps(appState.route) : [];
+  const currentStep = steps[appState.currentStepIndex] || null;
+  const nextStep = steps[appState.currentStepIndex + 1] || null;
+
+  setText(
+    "devScreenGps",
+    [
+      `locationReady: ${appState.locationReady}`,
+      `lat: ${appState.currentLocation?.lat ?? "--"}`,
+      `lng: ${appState.currentLocation?.lng ?? "--"}`,
+      `accuracy: ${appState.latestAccuracy != null ? Math.round(appState.latestAccuracy) + "m" : "--"}`
+    ].join("\n")
+  );
+
+  setText(
+    "devScreenRoute",
+    [
+      `destination: ${selectedDestination?.name || "--"}`,
+      `routeSelected: ${routeResults[selectedRouteIndex]?.type || "--"}`,
+      `routeCount: ${routeResults.length}`,
+      `distance: ${appState.route?.distanceMeters ? formatDistance(appState.route.distanceMeters) : "--"}`,
+      `duration: ${appState.route?.duration ? formatDuration(appState.route.duration) : "--"}`,
+      `deviation: ${appState.routeDeviationMeters ?? "--"}m`,
+      `offRouteCount: ${appState.offRouteCount ?? 0}`,
+      `rerouting: ${appState.rerouting ? "true" : "false"}`
+    ].join("\n")
+  );
+
+  setText(
+    "devScreenStep",
+    [
+      `stepIndex: ${steps.length ? appState.currentStepIndex : "--"}`,
+      `stepTotal: ${steps.length}`,
+      `remain: ${appState.currentStepRemainMeters != null ? Math.round(appState.currentStepRemainMeters) + "m" : "--"}`,
+      `currentManeuver: ${appState.currentManeuver || "--"}`,
+      `nextManeuver: ${appState.nextManeuver || "--"}`,
+      `currentArrow: ${appState.currentArrow ?? "--"}`,
+      `nextArrow: ${appState.nextArrow ?? "--"}`
+    ].join("\n")
+  );
+
+  setText(
+    "devScreenNavi",
+    [
+      `display: ${arrowToLabel(appState.currentArrow ?? 99)} ${formatStepDistance(appState.currentStepRemainMeters)} ${arrowToLabel(appState.nextArrow ?? 99)}`,
+      `instruction: ${currentStep?.navigationInstruction?.instructions || "--"}`,
+      `nextInstruction: ${nextStep?.navigationInstruction?.instructions || "--"}`
+    ].join("\n")
+  );
+
+  setText(
+    "devScreenBle",
+    [
+      `bleConnected: --`,
+      `lastPacket: --`,
+      `sendStatus: not implemented`
+    ].join("\n")
+  );
+
+  setText(
+    "devScreenState",
+    JSON.stringify(
+      {
+        screen: appState.screen,
+        locationReady: appState.locationReady,
+        currentStepIndex: appState.currentStepIndex,
+        routeDeviationMeters: appState.routeDeviationMeters,
+        offRouteCount: appState.offRouteCount,
+        rerouting: appState.rerouting
+      },
+      null,
+      2
+    )
+  );
+}
+
 function toggleDeveloperMode() {
   developerMode = !developerMode;
   document.body.classList.toggle("dev-mode", developerMode);
@@ -1028,3 +1108,4 @@ window.toggleDeveloperMode = toggleDeveloperMode;
 window.selectRouteOption = selectRouteOption;
 window.calculateRoutes = calculateRoutes;
 window.startNavigation = startNavigation;
+window.updateDevScreen = updateDevScreen;
