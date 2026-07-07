@@ -875,51 +875,44 @@ function drawMiniMap(current, routePoints) {
   const sin = Math.sin(bearing);
 
   const scale = 0.7;          // まず小さめ
-  const maxDrawDistance = 400; // 400m先まで描画
+  //const maxDrawDistance = 400; // 400m先まで描画
 
   ctx.strokeStyle = "white";
   ctx.lineWidth = 10;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
+
   ctx.beginPath();
-  ctx.moveTo(selfX, selfY);
+ctx.moveTo(selfX, selfY);
 
-  let drawn = false;
+let drawn = false;
 
-  // nearestIndexそのものは後ろ側の可能性があるので +1 から描く
-  for (let i = nearestIndex + 1; i < routePoints.length; i++) {
-    const p = routePoints[i];
+for (let i = nearestIndex + 1; i < routePoints.length; i++) {
+  const p = routePoints[i];
 
-    const distanceFromCurrent = getDistanceMeters(current, p);
-    if (distanceFromCurrent > maxDrawDistance) break;
+  const dx =
+    (p.lng - current.lng) *
+    Math.cos(current.lat * Math.PI / 180) *
+    111320;
 
-    const dx =
-      (p.lng - current.lng) *
-      Math.cos(current.lat * Math.PI / 180) *
-      111320;
+  const dy =
+    (p.lat - current.lat) *
+    110540;
 
-    const dy =
-      (p.lat - current.lat) *
-      110540;
+  const rx = dx * cos - dy * sin;
+  const ry = dx * sin + dy * cos;
 
-    const rx = dx * cos - dy * sin;
-    const ry = dx * sin + dy * cos;
+  const x = selfX + rx * scale;
+  const y = selfY - ry * scale;
 
-    // 現在地より後ろ側の点は描かない
-    if (ry < 0) continue;
+  ctx.lineTo(x, y);
+  drawn = true;
+}
 
-    const x = selfX + rx * scale;
-    const y = selfY - ry * scale;
-
-    ctx.lineTo(x, y);
-    drawn = true;
-  }
-
-  if (drawn) {
-    ctx.stroke();
-  }
-
+if (drawn) {
+  ctx.stroke();
+}
   drawSelfPoint(ctx, selfX, selfY);
 }
 // ==============================
