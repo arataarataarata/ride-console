@@ -778,6 +778,8 @@ async function recalculateRoute() {
 // ==============================
 // Mini Map
 // ==============================
+
+
 function getBearingToNextRoutePoint(current, routePoints, minLookAhead = 40) {
   if (!current || !Array.isArray(routePoints) || routePoints.length < 2) {
     return 0;
@@ -844,8 +846,14 @@ function drawMiniMap(current, routePoints) {
   const W = canvas.width;
   const H = canvas.height;
 
+  const MAP_WIDTH_METERS = 500;
+  const MAP_FORWARD_METERS = 400;
+  const MAP_BACKWARD_METERS = 100;
+
+  const scale = W / MAP_WIDTH_METERS;
+
   const selfX = W / 2;
-  const selfY = H * 0.85;
+  const selfY = H * 0.8;
 
   ctx.clearRect(0, 0, W, H);
 
