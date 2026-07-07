@@ -736,7 +736,20 @@ if (
 ) {
   index += 1;
   appState.currentStepIndex = index;
+
+  const nextRemainInfo = getRemainingDistanceToStepEnd(
+    appState.currentLocation,
+    steps[index]
+  );
+
+  if (nextRemainInfo) {
+    appState.currentStepRemainMeters = nextRemainInfo.remainMeters;
+  }
+} else {
+  appState.currentStepRemainMeters = remainInfo.remainMeters;
 }
+  
+
 
   const currentStep = steps[index];
   const nextStep = steps[index + 1];
