@@ -54,13 +54,15 @@
     <span>START NAVIGATION</span>
     <small>safe ride!</small>
   </button>
-
   <div class="action-row">
     <button class="secondary-action" onclick="showScreen('map')">
       目的地変更
     </button>
     <button class="secondary-action">
       BLE接続
+    </button>
+    <button class="secondary-action" onclick="showScreen('dev')">
+      DEV
     </button>
   </div>
 
@@ -187,6 +189,50 @@
   </div>
 
  
+</section>
+
+<!-- DEV -->
+<section id="screen-dev" class="screen">
+  <header class="map-header">
+    <button class="round-button" onclick="showScreen('home')">‹</button>
+    <div>
+      <div class="app-kicker">DEVELOPER MODE</div>
+      <h1>Dev</h1>
+    </div>
+    <button class="round-button" onclick="updateDevScreen()">↻</button>
+  </header>
+
+  <div class="dev-screen-grid">
+    <div class="dev-card">
+      <div class="label">GPS</div>
+      <pre id="devScreenGps">--</pre>
+    </div>
+
+    <div class="dev-card">
+      <div class="label">ROUTE</div>
+      <pre id="devScreenRoute">--</pre>
+    </div>
+
+    <div class="dev-card">
+      <div class="label">STEP</div>
+      <pre id="devScreenStep">--</pre>
+    </div>
+
+    <div class="dev-card">
+      <div class="label">NAVIGATION</div>
+      <pre id="devScreenNavi">--</pre>
+    </div>
+
+    <div class="dev-card">
+      <div class="label">BLE</div>
+      <pre id="devScreenBle">--</pre>
+    </div>
+
+    <div class="dev-card">
+      <div class="label">STATE</div>
+      <pre id="devScreenState">--</pre>
+    </div>
+  </div>
 </section>
     
  <div id="developerPanel" class="developer-panel">
