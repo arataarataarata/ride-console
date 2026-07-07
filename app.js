@@ -824,6 +824,8 @@ function getBearingToNextRoutePoint(current, routePoints, minLookAhead = 40) {
   // 画面座標系に合わせるため、ここでは atan2(dx, dy)
   return Math.atan2(dx, dy);
 }
+
+
 function drawMiniMap(current, routePoints) {
   const canvas = document.getElementById("miniMap");
   if (!canvas) return;
@@ -883,6 +885,7 @@ function drawMiniMap(current, routePoints) {
     　nearestIndex = i;
   　}
 　}
+}
 // ==============================
 // UI
 // ==============================
