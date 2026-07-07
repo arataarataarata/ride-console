@@ -727,11 +727,19 @@ body.dev-mode .developer-panel {
   overflow: hidden;
 }
 
-#miniMapCanvas {
-  width: 320px;
-  height: 320px;
-  display: block;
-  background: #000;
+#miniMapContainer{
+    width:340px;
+    height:340px;
+
+    padding:10px;
+
+    background:#222;
+    border:2px solid #555;
+    border-radius:12px;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
 }
 window.showScreen = showScreen;
 window.toggleDeveloperMode = toggleDeveloperMode;
