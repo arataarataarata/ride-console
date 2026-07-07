@@ -804,68 +804,42 @@ function getBearingToNextRoutePoint(current, routePoints, minLookAhead = 40) {
   // 北=0、東=+90度
   return Math.atan2(dx, dy);
 }
-function drawMiniMap(current, routePoints) {
-  const canvas = document.getElementById("miniMap");
-  if (!canvas || !current || !routePoints || routePoints.length < 2) return;
+function drawMiniMap() {
+  console.log("drawMiniMap called");
 
-  const ctx = canvas.getContext("2d");
+  const canvas = document.getElementById("miniMapCanvas");
+  console.log("canvas:", canvas);
+  console.log("route:", appState.route);
+  console.log("currentLocation:", appState.currentLocation);
 
-  const W = canvas.width;
-  const H = canvas.height;
-
-  const selfX = W / 2;
-  const selfY = H * 0.85; // 中央下
-
-  ctx.clearRect(0, 0, W, H);
-
-  const bearing = getBearingToNextRoutePoint(current, routePoints, 40);
-
-  // 40m先の方向を「画面の真上」にする
-  const cos = Math.cos(-bearing);
-  const sin = Math.sin(-bearing);
-
-  const scale = 1.2;
-
-  ctx.strokeStyle = "white";
-  ctx.lineWidth = 10;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-
-  ctx.beginPath();
-
-  let started = false;
-
-  for (const p of routePoints) {
-    const dx =
-      (p.lng - current.lng) *
-      Math.cos(current.lat * Math.PI / 180) *
-      111320;
-
-    const dy =
-      (p.lat - current.lat) *
-      110540;
-
-    const rx = dx * cos - dy * sin;
-    const ry = dx * sin + dy * cos;
-
-    const x = selfX + rx * scale;
-    const y = selfY - ry * scale;
-
-    if (!started) {
-      ctx.moveTo(x, y);
-      started = true;
-    } else {
-      ctx.lineTo(x, y);
-    }
+  if (!canvas) {
+    console.warn("miniMapCanvas not found");
+    return;
   }
 
-  ctx.stroke();
+  if (!appState.route) {
+    console.warn("appState.route missing");
+    return;
+  }
 
-  // 自車位置
+  if (!appState.currentLocation) {
+    console.warn("currentLocation missing");
+    return;
+  }
+
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // テスト描画
   ctx.fillStyle = "white";
   ctx.beginPath();
-  ctx.arc(selfX, selfY, 10, 0, Math.PI * 2);
+  ctx.arc(w / 2, h / 2, 20, 0, Math.PI * 2);
   ctx.fill();
+
+  console.log("mini map test circle drawn");
 }
 
 // ==============================
