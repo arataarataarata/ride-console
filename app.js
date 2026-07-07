@@ -882,7 +882,7 @@ function drawMiniMap(current, routePoints) {
   const cos = Math.cos(bearing);
   const sin = Math.sin(bearing);
 
-  const scale = 0.7;          // まず小さめ
+  //const scale = 0.7;          // まず小さめ
   //const maxDrawDistance = 400; // 400m先まで描画
 
   ctx.strokeStyle = "white";
