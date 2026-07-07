@@ -50,7 +50,8 @@ const MANEUVER_ARROW_MAP = {
   FORK_LEFT: 13,
   FORK_RIGHT: 14,
   ROUNDABOUT_LEFT: 15,
-  ROUNDABOUT_RIGHT: 16
+  ROUNDABOUT_RIGHT: 16,
+  NAME_CHANGE: 3
 };
 
 function maneuverToArrow(maneuver) {
