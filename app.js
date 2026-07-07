@@ -34,7 +34,11 @@ const appState = {
   currentStepRemainMeters: null,
   offRouteCount: 0,
   routeDeviationMeters: null,
-  rerouting: false
+  rerouting: false,
+  currentArrow: 99,
+  nextArrow: 99,
+  currentManeuver: "",
+  nextManeuver: ""
 };
 // ==============================
 // arrow
@@ -237,8 +241,8 @@ function startLocationWatch() {
       appState.latestAccuracy = accuracy;
       appState.locationReady = true;
 
-      updateCurrentLocationOnMap(lat, lng, accuracy);
-      updateCurrentStep();
+      urrentLocationOnMap(lat, lng, accuracy);
+      urrentStep();
       checkRouteDeviation();
       
       showDevLog(
@@ -875,7 +879,12 @@ if (
 
   const currentStep = steps[index];
   const nextStep = steps[index + 1];
-
+ 
+  appState.currentArrow = currentArrow;
+  appState.nextArrow = nextArrow;
+  appState.currentManeuver = currentManeuver;
+  appState.nextManeuver = nextManeuver;
+  
   const currentManeuver =
     currentStep?.navigationInstruction?.maneuver || "";
 
