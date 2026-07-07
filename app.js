@@ -43,7 +43,16 @@ const appState = {
   currentArrow: 99,
   nextArrow: 99,
   currentManeuver: "",
-  nextManeuver: ""
+  nextManeuver: "",
+  bleEnabled: false,        // BLE送信を使うか
+  bleConnected: false,      // 実際に接続中か
+  bleMode: "off",           // off / navi / time
+  bleDevice: null,
+  bleCharacteristic: null,
+  bleReconnect: false,
+  lastBleSendAt: 0,
+  bleSendCount: 0,
+  bleErrorCount: 0,
 };
 // ==============================
 // arrow
