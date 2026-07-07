@@ -9,13 +9,7 @@
 </head>
 <body>
 
-  <button id="developerToggle"
-          class="round-button developer-toggle"
-          onclick="toggleDeveloperMode()">
-    DEV
-  </button>
-
-  <div id="app">
+<div id="app">
 
 
 <!-- HOME -->
@@ -82,6 +76,7 @@
 
 <!-- MAP -->
 <section id="screen-map" class="screen">
+  <button class="round-button" onclick="showScreen('dev')">DEV</button>
   <header class="map-header">
     
     <div>
@@ -149,10 +144,17 @@
     
 <!-- NAVI -->
 <section id="screen-navi" class="screen">
-  <button class="dev-floating-button"
-        onclick="toggleDeveloperMode()">
-  DEV
-</button>
+<div class="bottom-buttons">
+  <button class="primary-button">PAUSE</button>
+
+  <button class="primary-button" onclick="showScreen('dev')">
+    DEV
+  </button>
+
+  <button class="danger-button" onclick="showScreen('home')">
+    END
+  </button>
+</div>
   <div class="navi-main">
     <div class="turn-arrow">↱</div>
     <div>
@@ -194,7 +196,7 @@
 <!-- DEV -->
 <section id="screen-dev" class="screen">
   <header class="map-header">
-    <button class="round-button" onclick="showScreen('home')">‹</button>
+<button class="round-button" onclick="showScreen('home')">‹</button>
     <div>
       <div class="app-kicker">DEVELOPER MODE</div>
       <h1>Dev</h1>
