@@ -759,10 +759,28 @@ async function recalculateRoute() {
 // ==============================
 // Mini Map
 // ==============================
-
 function drawMiniMap() {
+  console.log("drawMiniMap called");
+
   const canvas = document.getElementById("miniMapCanvas");
-  if (!canvas || !appState.route || !appState.currentLocation) return;
+  console.log("canvas:", canvas);
+  console.log("route:", appState.route);
+  console.log("currentLocation:", appState.currentLocation);
+
+  if (!canvas) {
+    console.warn("miniMapCanvas not found");
+    return;
+  }
+
+  if (!appState.route) {
+    console.warn("appState.route missing");
+    return;
+  }
+
+  if (!appState.currentLocation) {
+    console.warn("currentLocation missing");
+    return;
+  }
 
   const ctx = canvas.getContext("2d");
   const w = canvas.width;
@@ -770,58 +788,13 @@ function drawMiniMap() {
 
   ctx.clearRect(0, 0, w, h);
 
-  const encoded = appState.route.polyline?.encodedPolyline;
-  if (!encoded) return;
-
-  const path = google.maps.geometry.encoding.decodePath(encoded);
-  if (!path || path.length < 2) return;
-
-  const center = appState.currentLocation;
-
-  const scaleMeters = 600;
-  const selfX = w / 2;
-  const selfY = h * 0.72;
-
-  ctx.strokeStyle = "white";
-  ctx.lineWidth = 8;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-
-  ctx.beginPath();
-
-  path.forEach((point, index) => {
-    const p = {
-      lat: point.lat(),
-      lng: point.lng()
-    };
-
-    const dx = getDistanceMeters(
-      { lat: center.lat, lng: center.lng },
-      { lat: center.lat, lng: p.lng }
-    ) * (p.lng >= center.lng ? 1 : -1);
-
-    const dy = getDistanceMeters(
-      { lat: center.lat, lng: center.lng },
-      { lat: p.lat, lng: center.lng }
-    ) * (p.lat >= center.lat ? -1 : 1);
-
-    const x = selfX + (dx / scaleMeters) * w;
-    const y = selfY + (dy / scaleMeters) * h;
-
-    if (index === 0) {
-      ctx.moveTo(x, y);
-    } else {
-      ctx.lineTo(x, y);
-    }
-  });
-
-  ctx.stroke();
-
-  // 自車位置
+  // テスト描画
   ctx.fillStyle = "white";
   ctx.beginPath();
-  ctx.arc(selfX, selfY, 9, 0, Math.PI * 2);
+  ctx.arc(w / 2, h / 2, 20, 0, Math.PI * 2);
   ctx.fill();
+
+  console.log("mini map test circle drawn");
 }
 // ==============================
 // UI
