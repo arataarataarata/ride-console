@@ -32,6 +32,40 @@ const appState = {
   locationReady: false
 };
 
+const MANEUVER_ARROW_MAP = {
+  DEPART: 99,
+  DESTINATION: 98,
+
+  STRAIGHT: 3,
+
+  TURN_LEFT: 1,
+  TURN_RIGHT: 2,
+
+  TURN_SLIGHT_LEFT: 4,
+  TURN_SLIGHT_RIGHT: 5,
+
+  TURN_SHARP_LEFT: 6,
+  TURN_SHARP_RIGHT: 7,
+
+  UTURN_LEFT: 8,
+  UTURN_RIGHT: 9,
+
+  MERGE: 10,
+  RAMP_LEFT: 11,
+  RAMP_RIGHT: 12,
+
+  FORK_LEFT: 13,
+  FORK_RIGHT: 14,
+
+  ROUNDABOUT_LEFT: 15,
+  ROUNDABOUT_RIGHT: 16
+};
+
+function maneuverToArrow(maneuver) {
+  if (!maneuver) return 99;
+
+  return MANEUVER_ARROW_MAP[maneuver] ?? 99;
+}
 // ==============================
 // Map Style
 // ==============================
@@ -501,18 +535,21 @@ function startNavigation() {
   const distance = formatDistance(selected.route.distanceMeters);
 
   appState.route = selected.route;
-
-  const steps = getRouteSteps(selected.route);
-    console.log("Selected route steps:", steps);
-    console.table(
-    steps.map((step, index) => ({
-      index,
-      distance: step.distanceMeters,
-      maneuver: step.navigationInstruction?.maneuver || "",
-      instruction: step.navigationInstruction?.instructions || ""
-    }))
-  );
   
+  const steps = getRouteSteps(selected.route);
+  console.table(
+    steps.map((step, index) => {
+      const maneuver = step.navigationInstruction?.maneuver || "";
+      return {
+        index,
+        distance: step.distanceMeters,
+        maneuver,
+        arrow: maneuverToArrow(maneuver),
+        instruction: step.navigationInstruction?.instructions || ""
+      };
+    })
+  );
+   
   setText("naviDistance", distance);
   setText("naviInstruction", selected.type);
   setText("naviRoad", selectedDestination?.name || "Navigation");
