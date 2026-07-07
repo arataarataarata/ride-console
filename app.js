@@ -33,7 +33,8 @@ const appState = {
   currentStepIndex: 0,
   currentStepRemainMeters: null,
   offRouteCount: 0,
-  routeDeviationMeters: null
+  routeDeviationMeters: null,
+  rerouting: false
 };
 // ==============================
 // arrow
@@ -685,14 +686,68 @@ function checkRouteDeviation() {
     }
   ]);
   if (appState.offRouteCount >= 3) {
-    console.warn("REROUTE REQUIRED");
+    recalculateRoute();
+  }
+}
 
-    setText("naviNext", "REROUTE REQUIRED");
+async function recalculateRoute() {
+  if (appState.rerouting) {
+    console.log("Reroute already in progress");
+    return;
+  }
 
-  // 連続発火防止
+  if (!appState.currentLocation || !selectedDestination) {
+    console.warn("Cannot reroute: currentLocation or destination missing");
+    return;
+  }
+
+  const currentSelected = routeResults[selectedRouteIndex];
+
+  if (!currentSelected) {
+    console.warn("Cannot reroute: selected route missing");
+    return;
+  }
+
+  appState.rerouting = true;
+
+  try {
+    console.warn("REROUTE START");
+
+    //setText("naviNext", "REROUTING");
+
+    const useExpress = currentSelected.type === "EXPRESS";
+
+    const newRoute = await fetchRoute({
+      originLat: appState.currentLocation.lat,
+      originLng: appState.currentLocation.lng,
+      destLat: selectedDestination.lat,
+      destLng: selectedDestination.lng,
+      avoidHighways: !useExpress,
+      avoidTolls: !useExpress
+    });
+
+    if (!newRoute) {
+      console.warn("REROUTE FAILED");
+    //  setText("naviNext", "REROUTE FAILED");
+      return;
+    }
+
+    routeResults[selectedRouteIndex].route = newRoute;
+    appState.route = newRoute;
+    appState.currentStepIndex = 0;
+    appState.currentStepRemainMeters = null;
     appState.offRouteCount = 0;
- }
-  
+
+    drawSelectedRoute(selectedRouteIndex);
+    updateCurrentStep();
+    updateNaviStepDisplay();
+
+    console.warn("REROUTE DONE");
+    setText("naviNext", "REROUTE DONE");
+
+  } finally {
+    appState.rerouting = false;
+  }
 }
 // ==============================
 // UI
