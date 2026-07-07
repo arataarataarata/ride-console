@@ -873,37 +873,16 @@ function drawMiniMap(current, routePoints) {
 
   let started = false;
 
-  for (const p of routePoints) {
-    const dx =
-      (p.lng - current.lng) *
-      Math.cos(current.lat * Math.PI / 180) *
-      111320;
+  let nearestIndex = 0;
+　let nearestDist = Infinity;
 
-    const dy =
-      (p.lat - current.lat) *
-      110540;
-
-    const rx = dx * cos - dy * sin;
-    const ry = dx * sin + dy * cos;
-
-    const x = selfX + rx * scale;
-    const y = selfY - ry * scale;
-
-    if (!started) {
-      ctx.moveTo(x, y);
-      started = true;
-    } else {
-      ctx.lineTo(x, y);
-    }
-  }
-
-  ctx.stroke();
-
-  ctx.fillStyle = "white";
-  ctx.beginPath();
-  ctx.arc(selfX, selfY, 10, 0, Math.PI * 2);
-  ctx.fill();
-}
+　for (let i = 0; i < routePoints.length; i++) {
+  　const d = getDistanceMeters(current, routePoints[i]);
+  　if (d < nearestDist) {
+    　nearestDist = d;
+    　nearestIndex = i;
+  　}
+　}
 // ==============================
 // UI
 // ==============================
