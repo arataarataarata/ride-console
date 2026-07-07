@@ -341,10 +341,16 @@ async function fetchRoute({
         "Content-Type": "application/json",
         "X-Goog-Api-Key": GOOGLE_ROUTES_API_KEY,
         "X-Goog-FieldMask": [
-          "routes.distanceMeters",
-          "routes.duration",
-          "routes.polyline.encodedPolyline",
-          "routes.travelAdvisory.tollInfo"
+        "routes.distanceMeters",
+        "routes.duration",
+        "routes.polyline.encodedPolyline",
+        "routes.travelAdvisory.tollInfo",
+
+  // step取得
+        "routes.legs.steps.distanceMeters",
+        "routes.legs.steps.staticDuration",
+        "routes.legs.steps.polyline.encodedPolyline",
+        "routes.legs.steps.navigationInstruction"
         ].join(",")
       },
       body: JSON.stringify(body)
@@ -358,7 +364,11 @@ async function fetchRoute({
 
     const data = await response.json();
     console.log("Routes API response:", data);
-
+    
+    if (data.routes && data.routes[0]?.legs?.[0]?.steps) {
+      console.log("Route steps:", data.routes[0].legs[0].steps);
+    }
+    
     if (!data.routes || data.routes.length === 0) {
       return null;
     }
@@ -368,6 +378,14 @@ async function fetchRoute({
     console.error("fetchRoute failed:", error);
     return null;
   }
+}
+
+function getRouteSteps(route) {
+  if (!route || !route.legs || !route.legs[0] || !route.legs[0].steps) {
+    return [];
+  }
+
+  return route.legs[0].steps;
 }
 
 // ==============================
@@ -484,6 +502,17 @@ function startNavigation() {
 
   appState.route = selected.route;
 
+  const steps = getRouteSteps(selected.route);
+    console.log("Selected route steps:", steps);
+    console.table(
+    steps.map((step, index) => ({
+      index,
+      distance: step.distanceMeters,
+      maneuver: step.navigationInstruction?.maneuver || "",
+      instruction: step.navigationInstruction?.instructions || ""
+    }))
+  );
+  
   setText("naviDistance", distance);
   setText("naviInstruction", selected.type);
   setText("naviRoad", selectedDestination?.name || "Navigation");
