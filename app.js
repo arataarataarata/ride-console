@@ -155,6 +155,10 @@ const rideConsoleMapStyle = [
 document.addEventListener("DOMContentLoaded", restoreDeveloperMode);
 
 function initMap() {
+
+  if (window.BLE) {
+  BLE.updateStatusUI();
+  }
   const defaultPosition = {
     lat: 35.681236,
     lng: 139.767125
