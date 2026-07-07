@@ -669,11 +669,12 @@ function updateNaviStepDisplay() {
 
   setText("naviInstruction", instruction);
  
-  if(BLE.isEnabled()){
-    BLE.sendNavigation(
-        `${arrow1}|${distance}|${arrow2}|${maneuver}|${line2}`
-    );
-}
+ if (window.BLE && BLE.isEnabled() && BLE.isConnected()) {
+　　　  const payload = `${currentArrow}|${distance}|${nextArrow}|${currentManeuver}|${instruction}`;
+ 　　　 BLE.sendNavigation(payload);
+　}
+  
+
 }
 
 // ==============================
