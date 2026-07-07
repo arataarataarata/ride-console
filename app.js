@@ -759,42 +759,91 @@ async function recalculateRoute() {
 // ==============================
 // Mini Map
 // ==============================
-function drawMiniMap() {
-  console.log("drawMiniMap called");
+function getBearingToNextRoutePoint(current, routePoints, minLookAhead = 30) {
+  if (!current || !routePoints || routePoints.length < 2) return 0;
 
-  const canvas = document.getElementById("miniMapCanvas");
-  console.log("canvas:", canvas);
-  console.log("route:", appState.route);
-  console.log("currentLocation:", appState.currentLocation);
+  let nearestIndex = 0;
+  let nearestDist = Infinity;
 
-  if (!canvas) {
-    console.warn("miniMapCanvas not found");
-    return;
+  for (let i = 0; i < routePoints.length; i++) {
+    const d = getDistanceMeters(current, routePoints[i]);
+    if (d < nearestDist) {
+      nearestDist = d;
+      nearestIndex = i;
+    }
   }
 
-  if (!appState.route) {
-    console.warn("appState.route missing");
-    return;
+  // 現在地より先の点を探す
+  let target = routePoints[Math.min(nearestIndex + 1, routePoints.length - 1)];
+  let accum = 0;
+
+  for (let i = nearestIndex; i < routePoints.length - 1; i++) {
+    const d = getDistanceMeters(routePoints[i], routePoints[i + 1]);
+    accum += d;
+
+    if (accum >= minLookAhead) {
+      target = routePoints[i + 1];
+      break;
+    }
   }
 
-  if (!appState.currentLocation) {
-    console.warn("currentLocation missing");
-    return;
-  }
+  const dx = (target.lng - current.lng) * Math.cos(current.lat * Math.PI / 180);
+  const dy = target.lat - current.lat;
 
+  // 北=0、東=90度
+  return Math.atan2(dx, dy);
+}
+
+function drawMiniMap(current, routePoints) {
+  const canvas = document.getElementById("miniMap");
   const ctx = canvas.getContext("2d");
-  const w = canvas.width;
-  const h = canvas.height;
 
-  ctx.clearRect(0, 0, w, h);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // テスト描画
+  const bearing = getBearingToNextRoutePoint(current, routePoints, 40);
+
+  const scale = 2.0; // 調整可
+  const cx = MINI_SELF_X;
+  const cy = MINI_SELF_Y;
+
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 10;
+  ctx.beginPath();
+
+  let started = false;
+
+  for (const p of routePoints) {
+    const dx =
+      (p.lng - current.lng) *
+      Math.cos(current.lat * Math.PI / 180) *
+      111320;
+
+    const dy =
+      (p.lat - current.lat) *
+      110540;
+
+    // bearing方向を画面上方向に回転
+    const x = dx * Math.cos(-bearing) - dy * Math.sin(-bearing);
+    const y = dx * Math.sin(-bearing) + dy * Math.cos(-bearing);
+
+    const screenX = cx + x * scale;
+    const screenY = cy - y * scale;
+
+    if (!started) {
+      ctx.moveTo(screenX, screenY);
+      started = true;
+    } else {
+      ctx.lineTo(screenX, screenY);
+    }
+  }
+
+  ctx.stroke();
+
+  // 自車位置
   ctx.fillStyle = "white";
   ctx.beginPath();
-  ctx.arc(w / 2, h / 2, 20, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 10, 0, Math.PI * 2);
   ctx.fill();
-
-  console.log("mini map test circle drawn");
 }
 // ==============================
 // UI
