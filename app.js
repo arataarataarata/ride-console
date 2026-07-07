@@ -581,6 +581,11 @@ function startNavigation() {
   const distance = formatDistance(selected.route.distanceMeters);
 
   appState.route = selected.route;
+  appState.routePoints = decodePolyline(
+  appState.route.polyline.encodedPolyline
+  );
+
+drawMiniMap(appState.currentLocation, appState.routePoints);
   appState.currentStepIndex = 0;
   appState.currentStepRemainMeters = null;
   updateCurrentStep();
@@ -810,7 +815,6 @@ function drawMiniMap(current, routePoints) {
 
   const ctx = canvas.getContext("2d");
 
-  // 念のため実描画サイズを固定
   canvas.width = 320;
   canvas.height = 320;
 
@@ -822,11 +826,10 @@ function drawMiniMap(current, routePoints) {
 
   ctx.clearRect(0, 0, W, H);
 
-  // 背景
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, W, H);
 
-  // デバッグ用：必ず見える縦線
+  // デバッグ赤線
   ctx.strokeStyle = "red";
   ctx.lineWidth = 4;
   ctx.beginPath();
@@ -834,17 +837,30 @@ function drawMiniMap(current, routePoints) {
   ctx.lineTo(selfX, H);
   ctx.stroke();
 
-  // ルート線
+  // current / routePoints がない場合でも自車位置だけ出す
+  if (!current || !Array.isArray(routePoints) || routePoints.length < 2) {
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(selfX, selfY, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    console.warn("drawMiniMap: invalid current or routePoints", {
+      current,
+      routePoints
+    });
+
+    return;
+  }
+
+  const scale = 1.2;
+
   ctx.strokeStyle = "white";
   ctx.lineWidth = 10;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-
   ctx.beginPath();
 
-  // まず回転なしで表示確認
   let started = false;
-  const scale = 1.2;
 
   for (const p of routePoints) {
     const dx =
@@ -869,13 +885,11 @@ function drawMiniMap(current, routePoints) {
 
   ctx.stroke();
 
-  // 自車位置
   ctx.fillStyle = "white";
   ctx.beginPath();
   ctx.arc(selfX, selfY, 10, 0, Math.PI * 2);
   ctx.fill();
 }
-
 
 // ==============================
 // UI
