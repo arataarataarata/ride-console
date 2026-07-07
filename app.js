@@ -1277,6 +1277,14 @@ function setText(id, text) {
     element.textContent = text;
   }
 }
+// ==============================
+// BLE
+// ==============================
+
+// HOME画面のBLEボタン
+async function onBleButtonClick() {
+  await BLE.toggle();
+}
 
 // ==============================
 // Expose functions
