@@ -821,7 +821,20 @@ function showDevLog(text) {
     debugGps.textContent = text;
   }
 }
+setText(
+    "devLine1",
+    `GPS:${Math.round(appState.latestAccuracy ?? 0)}m   `
+    +`DEV:${appState.routeDeviationMeters ?? "--"}m   `
+    +`OFF:${appState.offRouteCount}   `
+    +`STEP:${appState.currentStepIndex+1}`
+);
 
+setText(
+    "devLine2",
+    `${arrowToLabel(appState.currentArrow)}→${arrowToLabel(appState.nextArrow)}   `
+    +`${formatStepDistance(appState.currentStepRemainMeters)}   `
+    +`${appState.currentManeuver || "--"}`
+);
 // ==============================
 // Utility
 // ==============================
