@@ -729,10 +729,14 @@ function updateCurrentStep() {
   appState.currentStepRemainMeters = remainInfo.remainMeters;
 
   // step終端に近づいたら次へ進める
-  if (remainInfo.remainMeters < 20 && index < steps.length - 1) {
-    index += 1;
-    appState.currentStepIndex = index;
-  }
+const STEP_ADVANCE_THRESHOLD_METERS = 20;
+if (
+  remainInfo.routeRemain < STEP_ADVANCE_THRESHOLD_METERS &&
+  index < steps.length - 1
+) {
+  index += 1;
+  appState.currentStepIndex = index;
+}
 
   const currentStep = steps[index];
   const nextStep = steps[index + 1];
@@ -743,17 +747,21 @@ function updateCurrentStep() {
   const nextManeuver =
     nextStep?.navigationInstruction?.maneuver || "";
 
-  console.table([
-    {
-      currentStepIndex: index,
-      remain: remainInfo.remainMeters,
-      nearestDistance: remainInfo.nearestDistance,
-      currentManeuver,
-      currentArrow: maneuverToArrow(currentManeuver),
-      nextManeuver,
-      nextArrow: maneuverToArrow(nextManeuver)
-    }
-  ]);
+console.table([
+  {
+    currentStepIndex: index,
+    remain: remainInfo.remainMeters,
+    routeRemain: remainInfo.routeRemain,
+    directRemain: remainInfo.directRemain,
+    nearestDistance: remainInfo.nearestDistance,
+    nearestIndex: remainInfo.nearestIndex,
+    pointCount: remainInfo.pointCount,
+    currentManeuver,
+    currentArrow: maneuverToArrow(currentManeuver),
+    nextManeuver,
+    nextArrow: maneuverToArrow(nextManeuver)
+  }
+]);
   updateNaviStepDisplay();
 }
 
@@ -766,13 +774,14 @@ function getRemainingDistanceToStepEnd(currentLocation, step) {
     step.polyline.encodedPolyline
   );
 
-  if (!path || path.length === 0) {
+  if (!path || path.length < 2) {
     return null;
   }
 
   let nearestIndex = 0;
   let nearestDistance = Infinity;
 
+  // 1. 現在地に最も近いpolyline点を探す
   path.forEach((point, index) => {
     const p = latLngToPlain(point);
     const d = getDistanceMeters(currentLocation, p);
@@ -783,20 +792,27 @@ function getRemainingDistanceToStepEnd(currentLocation, step) {
     }
   });
 
-  let remain = 0;
+  // 2. 最寄点からstep終端までのpolyline距離
+  let routeRemain = 0;
 
   for (let i = nearestIndex; i < path.length - 1; i++) {
-    remain += google.maps.geometry.spherical.computeDistanceBetween(
+    routeRemain += google.maps.geometry.spherical.computeDistanceBetween(
       path[i],
       path[i + 1]
     );
   }
 
+  // 3. 現在地から最寄点までの直線距離
   const nearestPoint = latLngToPlain(path[nearestIndex]);
-  remain += getDistanceMeters(currentLocation, nearestPoint);
+  const directRemain = getDistanceMeters(currentLocation, nearestPoint);
+
+  // 4. 旧ソフト方式：polyline残距離 + 現在地ズレ補正
+  const remainMeters = routeRemain + directRemain;
 
   return {
-    remainMeters: Math.round(remain),
+    remainMeters: Math.round(remainMeters),
+    routeRemain: Math.round(routeRemain),
+    directRemain: Math.round(directRemain),
     nearestDistance: Math.round(nearestDistance),
     nearestIndex,
     pointCount: path.length
