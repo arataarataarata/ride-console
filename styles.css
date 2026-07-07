@@ -647,12 +647,7 @@ body.dev-mode .round-button {
   z-index: 2;
 }
 
-.developer-toggle {
-  position: fixed;
-  top: 14px;
-  right: 14px;
-  z-index: 10000;
-}
+
 .developer-panel {
 
     display: none;
