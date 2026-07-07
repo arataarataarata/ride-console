@@ -249,7 +249,7 @@ function startLocationWatch() {
       updateCurrentLocationOnMap(lat, lng, accuracy);
       updateCurrentStep();
       checkRouteDeviation();
-      drawMiniMap();
+      drawMiniMap(appState.currentLocation, appState.routePoints);
       
       showDevLog(
         `GPS lat=${lat.toFixed(6)}, lng=${lng.toFixed(6)}, acc=${Math.round(accuracy)}m`
@@ -616,7 +616,7 @@ drawMiniMap(appState.currentLocation, appState.routePoints);
   updateNaviStepDisplay();
   updateNaviDebug(selected);
   showScreen("navi");
-  drawMiniMap();
+  drawMiniMap(appState.currentLocation, appState.routePoints);
 }
 function updateNaviStepDisplay() {
   if (!appState.route) return;
