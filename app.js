@@ -865,63 +865,63 @@ function updateCurrentStep() {
     return;
   }
 
-  appState.currentStepRemainMeters = remainInfo.remainMeters;
+  const STEP_ADVANCE_THRESHOLD_METERS = 20;
 
-  // step終端に近づいたら次へ進める
-const STEP_ADVANCE_THRESHOLD_METERS = 20;
-if (
-  remainInfo.routeRemain < STEP_ADVANCE_THRESHOLD_METERS &&
-  index < steps.length - 1
-) {
-  index += 1;
-  appState.currentStepIndex = index;
+  if (
+    remainInfo.routeRemain < STEP_ADVANCE_THRESHOLD_METERS &&
+    index < steps.length - 1
+  ) {
+    index += 1;
+    appState.currentStepIndex = index;
 
-  const nextRemainInfo = getRemainingDistanceToStepEnd(
-    appState.currentLocation,
-    steps[index]
-  );
+    const nextRemainInfo = getRemainingDistanceToStepEnd(
+      appState.currentLocation,
+      steps[index]
+    );
 
-  if (nextRemainInfo) {
-    appState.currentStepRemainMeters = nextRemainInfo.remainMeters;
+    if (nextRemainInfo) {
+      appState.currentStepRemainMeters = nextRemainInfo.remainMeters;
+    }
+  } else {
+    appState.currentStepRemainMeters = remainInfo.remainMeters;
   }
-} else {
-  appState.currentStepRemainMeters = remainInfo.remainMeters;
-}
-  
-
 
   const currentStep = steps[index];
   const nextStep = steps[index + 1];
- 
-  appState.currentArrow = currentArrow;
-  appState.nextArrow = nextArrow;
-  appState.currentManeuver = currentManeuver;
-  appState.nextManeuver = nextManeuver;
-  
+
   const currentManeuver =
     currentStep?.navigationInstruction?.maneuver || "";
 
   const nextManeuver =
     nextStep?.navigationInstruction?.maneuver || "";
 
-console.table([
-  {
-    currentStepIndex: index,
-    remain: remainInfo.remainMeters,
-    routeRemain: remainInfo.routeRemain,
-    directRemain: remainInfo.directRemain,
-    nearestDistance: remainInfo.nearestDistance,
-    nearestIndex: remainInfo.nearestIndex,
-    pointCount: remainInfo.pointCount,
-    currentManeuver,
-    currentArrow: maneuverToArrow(currentManeuver),
-    nextManeuver,
-    nextArrow: maneuverToArrow(nextManeuver)
-  }
-]);
-  updateNaviStepDisplay();
-}
+  const currentArrow = maneuverToArrow(currentManeuver);
+  const nextArrow = maneuverToArrow(nextManeuver);
 
+  appState.currentArrow = currentArrow;
+  appState.nextArrow = nextArrow;
+  appState.currentManeuver = currentManeuver;
+  appState.nextManeuver = nextManeuver;
+
+  console.table([
+    {
+      currentStepIndex: index,
+      remain: appState.currentStepRemainMeters,
+      routeRemain: remainInfo.routeRemain,
+      directRemain: remainInfo.directRemain,
+      nearestDistance: remainInfo.nearestDistance,
+      nearestIndex: remainInfo.nearestIndex,
+      pointCount: remainInfo.pointCount,
+      currentManeuver,
+      currentArrow,
+      nextManeuver,
+      nextArrow
+    }
+  ]);
+
+  updateNaviStepDisplay();
+  updateDeveloperPanel();
+}
 function getRemainingDistanceToStepEnd(currentLocation, step) {
   if (!currentLocation || !step?.polyline?.encodedPolyline) {
     return null;
