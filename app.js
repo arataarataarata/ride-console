@@ -241,8 +241,8 @@ function startLocationWatch() {
       appState.latestAccuracy = accuracy;
       appState.locationReady = true;
 
-      urrentLocationOnMap(lat, lng, accuracy);
-      urrentStep();
+      CurrentLocationOnMap(lat, lng, accuracy);
+      CurrentStep();
       checkRouteDeviation();
       
       showDevLog(
