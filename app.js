@@ -779,7 +779,7 @@ async function recalculateRoute() {
 // Mini Map
 // ==============================
 function getBearingToNextRoutePoint(current, routePoints, minLookAhead = 40) {
-  if (!current || !routePoints || routePoints.length < 2) {
+  if (!current || !Array.isArray(routePoints) || routePoints.length < 2) {
     return 0;
   }
 
@@ -788,6 +788,7 @@ function getBearingToNextRoutePoint(current, routePoints, minLookAhead = 40) {
 
   for (let i = 0; i < routePoints.length; i++) {
     const d = getDistanceMeters(current, routePoints[i]);
+
     if (d < nearestDist) {
       nearestDist = d;
       nearestIndex = i;
@@ -815,10 +816,8 @@ function getBearingToNextRoutePoint(current, routePoints, minLookAhead = 40) {
     (target.lat - current.lat) *
     110540;
 
-  // 北=0、東=+90度
   return Math.atan2(dx, dy);
 }
-
 function drawMiniMap(current, routePoints) {
   const canvas = document.getElementById("miniMap");
   if (!canvas) return;
@@ -839,21 +838,24 @@ function drawMiniMap(current, routePoints) {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, W, H);
 
-
-  // current / routePoints がない場合でも自車位置だけ出す
   if (!current || !Array.isArray(routePoints) || routePoints.length < 2) {
     ctx.fillStyle = "white";
     ctx.beginPath();
     ctx.arc(selfX, selfY, 10, 0, Math.PI * 2);
     ctx.fill();
 
-    console.warn("drawMiniMap: invalid current or routePoints", {
+    console.warn("drawMiniMap skipped:", {
       current,
       routePoints
     });
 
     return;
   }
+
+  const bearing = getBearingToNextRoutePoint(current, routePoints, 40);
+
+  const cos = Math.cos(-bearing);
+  const sin = Math.sin(-bearing);
 
   const scale = 1.2;
 
@@ -875,8 +877,11 @@ function drawMiniMap(current, routePoints) {
       (p.lat - current.lat) *
       110540;
 
-    const x = selfX + dx * scale;
-    const y = selfY - dy * scale;
+    const rx = dx * cos - dy * sin;
+    const ry = dx * sin + dy * cos;
+
+    const x = selfX + rx * scale;
+    const y = selfY - ry * scale;
 
     if (!started) {
       ctx.moveTo(x, y);
@@ -893,7 +898,6 @@ function drawMiniMap(current, routePoints) {
   ctx.arc(selfX, selfY, 10, 0, Math.PI * 2);
   ctx.fill();
 }
-
 // ==============================
 // UI
 // ==============================
