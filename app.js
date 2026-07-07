@@ -29,7 +29,9 @@ const appState = {
   destination: null,
   currentLocation: null,
   latestAccuracy: null,
-  locationReady: false
+  locationReady: false,
+  currentStepIndex: 0,
+  currentStepRemainMeters: null
 };
 
 const MANEUVER_ARROW_MAP = {
@@ -114,7 +116,7 @@ function initMap() {
   });
 
   setupAutocomplete();
-  startLocationWatch();
+  cationWatch();
 }
 
 // ==============================
@@ -198,7 +200,8 @@ function startLocationWatch() {
       appState.locationReady = true;
 
       updateCurrentLocationOnMap(lat, lng, accuracy);
-
+      updateCurrentStep();
+      
       showDevLog(
         `GPS lat=${lat.toFixed(6)}, lng=${lng.toFixed(6)}, acc=${Math.round(accuracy)}m`
       );
@@ -529,6 +532,9 @@ function startNavigation() {
   const distance = formatDistance(selected.route.distanceMeters);
 
   appState.route = selected.route;
+  appState.currentStepIndex = 0;
+  appState.currentStepRemainMeters = null;
+  updateCurrentStep();
   
   const steps = getRouteSteps(selected.route);
   console.table(
@@ -628,6 +634,122 @@ function showDevLog(text) {
 // ==============================
 // Utility
 // ==============================
+function updateCurrentStep() {
+  if (!appState.route || !appState.currentLocation) {
+    return;
+  }
+
+  const steps = getRouteSteps(appState.route);
+
+  if (!steps.length) {
+    return;
+  }
+
+  let index = appState.currentStepIndex || 0;
+
+  if (index >= steps.length) {
+    index = steps.length - 1;
+  }
+
+  const step = steps[index];
+  const remainInfo = getRemainingDistanceToStepEnd(
+    appState.currentLocation,
+    step
+  );
+
+  if (!remainInfo) {
+    return;
+  }
+
+  appState.currentStepRemainMeters = remainInfo.remainMeters;
+
+  // step終端に近づいたら次へ進める
+  if (remainInfo.remainMeters < 20 && index < steps.length - 1) {
+    index += 1;
+    appState.currentStepIndex = index;
+  }
+
+  const currentStep = steps[index];
+  const nextStep = steps[index + 1];
+
+  const currentManeuver =
+    currentStep?.navigationInstruction?.maneuver || "";
+
+  const nextManeuver =
+    nextStep?.navigationInstruction?.maneuver || "";
+
+  console.table([
+    {
+      currentStepIndex: index,
+      remain: remainInfo.remainMeters,
+      nearestDistance: remainInfo.nearestDistance,
+      currentManeuver,
+      currentArrow: maneuverToArrow(currentManeuver),
+      nextManeuver,
+      nextArrow: maneuverToArrow(nextManeuver)
+    }
+  ]);
+}
+
+function getRemainingDistanceToStepEnd(currentLocation, step) {
+  if (!currentLocation || !step?.polyline?.encodedPolyline) {
+    return null;
+  }
+
+  const path = google.maps.geometry.encoding.decodePath(
+    step.polyline.encodedPolyline
+  );
+
+  if (!path || path.length === 0) {
+    return null;
+  }
+
+  let nearestIndex = 0;
+  let nearestDistance = Infinity;
+
+  path.forEach((point, index) => {
+    const p = latLngToPlain(point);
+    const d = getDistanceMeters(currentLocation, p);
+
+    if (d < nearestDistance) {
+      nearestDistance = d;
+      nearestIndex = index;
+    }
+  });
+
+  let remain = 0;
+
+  for (let i = nearestIndex; i < path.length - 1; i++) {
+    remain += google.maps.geometry.spherical.computeDistanceBetween(
+      path[i],
+      path[i + 1]
+    );
+  }
+
+  const nearestPoint = latLngToPlain(path[nearestIndex]);
+  remain += getDistanceMeters(currentLocation, nearestPoint);
+
+  return {
+    remainMeters: Math.round(remain),
+    nearestDistance: Math.round(nearestDistance),
+    nearestIndex,
+    pointCount: path.length
+  };
+}
+function getDistanceMeters(a, b) {
+  return google.maps.geometry.spherical.computeDistanceBetween(
+    new google.maps.LatLng(a.lat, a.lng),
+    new google.maps.LatLng(b.lat, b.lng)
+  );
+}
+
+function latLngToPlain(point) {
+  return {
+    lat: point.lat(),
+    lng: point.lng()
+  };
+}
+
 function formatDuration(durationText) {
   if (!durationText) return "--";
 
