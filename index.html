@@ -7,9 +7,16 @@
   <link rel="stylesheet" href="./styles.css">
 
 </head>
-
 <body>
+
+  <button id="developerToggle"
+          class="round-button developer-toggle"
+          onclick="toggleDeveloperMode()">
+    DEV
+  </button>
+
   <div id="app">
+
 
 <!-- HOME -->
 <section id="screen-home" class="screen active">
@@ -18,7 +25,7 @@
       <div class="app-kicker">HARLEY DIGITAL COCKPIT</div>
       <h1>Ride Console</h1>
     </div>
-    <button class="round-button" onclick="toggleDeveloperMode()">DEV</button>
+   
   </header>
 
   <div class="hero-card">
@@ -78,12 +85,12 @@
 <!-- MAP -->
 <section id="screen-map" class="screen">
   <header class="map-header">
-    <button class="round-button" onclick="showScreen('home')">‹</button>
+    
     <div>
       <div class="app-kicker">ROUTE PLANNER</div>
       <h1>Map</h1>
     </div>
-    <button class="round-button">⋯</button>
+    <button class="round-button" onclick="toggleDeveloperMode()">DEV</button>
   </header>
 
   <div class="search-card">
@@ -145,8 +152,14 @@
   <div id="debugRouteStatus">DEST: --</div>
 </div>  
 </section>
+
+    
 <!-- NAVI -->
 <section id="screen-navi" class="screen">
+  <button class="dev-floating-button"
+        onclick="toggleDeveloperMode()">
+  DEV
+</button>
   <div class="navi-main">
     <div class="turn-arrow">↱</div>
     <div>
@@ -188,8 +201,18 @@
     <div>SEND: 1,460m,2</div>
   </div>
 </section>
-    
-  </div>
+ <div id="developerPanel" class="developer-panel">
+  <div>MODE: DEV</div>
+  <div id="devGps">GPS: --</div>
+  <div id="devLocation">LOC: --</div>
+  <div id="devDestination">DEST: --</div>
+  <div id="devStep">STEP: --</div>
+  <div id="devRemain">REMAIN: --</div>
+  <div id="devDeviation">DEV: --</div>
+  <div id="devOffRoute">OFF: --</div>
+  <div id="devReroute">REROUTE: --</div>
+</div>   
+</div>
 
   <script src="./app.js?v=001"></script>
 
