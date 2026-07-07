@@ -23,14 +23,32 @@ const BLE = (() => {
   let lastError = "";
   let lastMessage = "";
 
-  async function sendNavigation(text){
-      if(text===lastMessage){
-          return;
+  let lastNavigationMessage = "";
+  let navigationSending = false;
+
+  async function sendNavigation(text) {
+    if (!enabled) return false;
+    if (!connected || !characteristic) return false;
+    if (!text) return false;
+
+  // 同じ内容は送らない
+    if (text === lastNavigationMessage) return true;
+
+  // 前回送信中なら捨てる
+    if (navigationSending) return false;
+
+    navigationSending = true;
+
+    try {
+      const ok = await sendText(text);
+      if (ok) {
+        lastNavigationMessage = text;
       }
-      lastMessage=text;
-      await sendText(text);
+      return ok;
+    } finally {
+      navigationSending = false;
+    }
   }
-  
   function isEnabled() {
     return enabled;
   }
