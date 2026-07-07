@@ -821,20 +821,23 @@ function showDevLog(text) {
     debugGps.textContent = text;
   }
 }
-setText(
+function updateDeveloperPanel() {
+  setText(
     "devLine1",
-    `GPS:${Math.round(appState.latestAccuracy ?? 0)}m   `
-    +`DEV:${appState.routeDeviationMeters ?? "--"}m   `
-    +`OFF:${appState.offRouteCount}   `
-    +`STEP:${appState.currentStepIndex+1}`
-);
+    `GPS:${appState.latestAccuracy != null ? Math.round(appState.latestAccuracy) : "--"}m   `
+    + `DEV:${appState.routeDeviationMeters ?? "--"}m   `
+    + `OFF:${appState.offRouteCount ?? 0}   `
+    + `STEP:${(appState.currentStepIndex ?? 0) + 1}`
+  );
 
-setText(
+  setText(
     "devLine2",
-    `${arrowToLabel(appState.currentArrow)}→${arrowToLabel(appState.nextArrow)}   `
-    +`${formatStepDistance(appState.currentStepRemainMeters)}   `
-    +`${appState.currentManeuver || "--"}`
-);
+    `${arrowToLabel(appState.currentArrow ?? 99)}→${arrowToLabel(appState.nextArrow ?? 99)}   `
+    + `${formatStepDistance(appState.currentStepRemainMeters)}   `
+    + `${appState.currentManeuver || "--"}`
+  );
+}
+
 // ==============================
 // Utility
 // ==============================
