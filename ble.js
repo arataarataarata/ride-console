@@ -21,7 +21,16 @@ const BLE = (() => {
   let errorCount = 0;
   let lastSentText = "";
   let lastError = "";
+  let lastMessage = "";
 
+  async function sendNavigation(text){
+      if(text===lastMessage){
+          return;
+      }
+      lastMessage=text;
+      await sendText(text);
+  }
+  
   function isEnabled() {
     return enabled;
   }
