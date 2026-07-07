@@ -718,7 +718,21 @@ body.dev-mode .developer-panel {
     grid-template-columns: 1fr;
   }
 }
+.navi-map {
+  width: 320px;
+  height: 320px;
+  margin: 12px auto;
+  background: #000;
+  border-radius: 16px;
+  overflow: hidden;
+}
 
+#miniMapCanvas {
+  width: 320px;
+  height: 320px;
+  display: block;
+  background: #000;
+}
 window.showScreen = showScreen;
 window.toggleDeveloperMode = toggleDeveloperMode;
 window.selectRouteOption = selectRouteOption;
