@@ -818,6 +818,7 @@ function getBearingToNextRoutePoint(current, routePoints, minLookAhead = 40) {
   // 北=0、東=+90度
   return Math.atan2(dx, dy);
 }
+
 function drawMiniMap(current, routePoints) {
   const canvas = document.getElementById("miniMap");
   if (!canvas) return;
@@ -838,13 +839,6 @@ function drawMiniMap(current, routePoints) {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, W, H);
 
-  // デバッグ赤線
-  ctx.strokeStyle = "red";
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(selfX, 0);
-  ctx.lineTo(selfX, H);
-  ctx.stroke();
 
   // current / routePoints がない場合でも自車位置だけ出す
   if (!current || !Array.isArray(routePoints) || routePoints.length < 2) {
