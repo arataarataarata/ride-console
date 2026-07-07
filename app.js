@@ -581,16 +581,22 @@ function startNavigation() {
   const distance = formatDistance(selected.route.distanceMeters);
 
   appState.route = selected.route;
-  appState.routePoints = decodePolyline(
-  appState.route.polyline.encodedPolyline
-  );
 
-drawMiniMap(appState.currentLocation, appState.routePoints);
+  const encoded = appState.route.polyline.encodedPolyline;
+  const path = google.maps.geometry.encoding.decodePath(encoded);
+
+  appState.routePoints = path.map(p => ({
+    lat: p.lat(),
+    lng: p.lng()
+  }));
+
   appState.currentStepIndex = 0;
   appState.currentStepRemainMeters = null;
+
   updateCurrentStep();
-  
+
   const steps = getRouteSteps(selected.route);
+
   console.table(
     steps.map((step, index) => {
       const maneuver = step.navigationInstruction?.maneuver || "";
@@ -603,7 +609,7 @@ drawMiniMap(appState.currentLocation, appState.routePoints);
       };
     })
   );
-   
+
   setText("naviDistance", "ready");
   setText("naviInstruction", selected.type);
   setText("naviRoad", selectedDestination?.name || "Navigation");
@@ -611,13 +617,16 @@ drawMiniMap(appState.currentLocation, appState.routePoints);
   setText("naviNext", "READY");
   setText("naviTotalDistance", distance);
   setText("naviEta", duration);
-  
+
   updateCurrentStep();
   updateNaviStepDisplay();
   updateNaviDebug(selected);
+
   showScreen("navi");
+
   drawMiniMap(appState.currentLocation, appState.routePoints);
 }
+
 function updateNaviStepDisplay() {
   if (!appState.route) return;
 
