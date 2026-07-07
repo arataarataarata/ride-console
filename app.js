@@ -783,28 +783,33 @@ function getBearingToNextRoutePoint(current, routePoints, minLookAhead = 40) {
     return 0;
   }
 
+  // 1. 現在地に一番近いルート点を探す
   let nearestIndex = 0;
   let nearestDist = Infinity;
 
   for (let i = 0; i < routePoints.length; i++) {
     const d = getDistanceMeters(current, routePoints[i]);
-
     if (d < nearestDist) {
       nearestDist = d;
       nearestIndex = i;
     }
   }
 
-  let target = routePoints[Math.min(nearestIndex + 1, routePoints.length - 1)];
-  let distanceSum = 0;
+  // 2. 近すぎる点ではなく、ある程度先の点を探す
+  let target = null;
 
-  for (let i = nearestIndex; i < routePoints.length - 1; i++) {
-    distanceSum += getDistanceMeters(routePoints[i], routePoints[i + 1]);
+  for (let i = nearestIndex + 1; i < routePoints.length; i++) {
+    const d = getDistanceMeters(current, routePoints[i]);
 
-    if (distanceSum >= minLookAhead) {
-      target = routePoints[i + 1];
+    if (d >= minLookAhead) {
+      target = routePoints[i];
       break;
     }
+  }
+
+  // 3. 見つからなければ最後の点
+  if (!target) {
+    target = routePoints[routePoints.length - 1];
   }
 
   const dx =
@@ -816,6 +821,7 @@ function getBearingToNextRoutePoint(current, routePoints, minLookAhead = 40) {
     (target.lat - current.lat) *
     110540;
 
+  // 画面座標系に合わせるため、ここでは atan2(dx, dy)
   return Math.atan2(dx, dy);
 }
 function drawMiniMap(current, routePoints) {
@@ -852,7 +858,7 @@ function drawMiniMap(current, routePoints) {
     return;
   }
 
-  const bearing = getBearingToNextRoutePoint(current, routePoints, 40);
+  const bearing = getBearingToNextRoutePoint(current, routePoints, 80);
 
   const cos = Math.cos(-bearing);
   const sin = Math.sin(-bearing);
