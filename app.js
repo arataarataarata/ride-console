@@ -585,18 +585,48 @@ function startNavigation() {
     })
   );
    
-  setText("naviDistance", distance);
+  setText("naviDistance", "ready");
   setText("naviInstruction", selected.type);
   setText("naviRoad", selectedDestination?.name || "Navigation");
 
   setText("naviNext", "READY");
   setText("naviTotalDistance", distance);
   setText("naviEta", duration);
-
+  
+  updateCurrentStep();
+  updateNaviStepDisplay();
   updateNaviDebug(selected);
   showScreen("navi");
 }
+function updateNaviStepDisplay() {
+  if (!appState.route) return;
 
+  const steps = getRouteSteps(appState.route);
+  const index = appState.currentStepIndex || 0;
+
+  const currentStep = steps[index];
+  const nextStep = steps[index + 1];
+
+  const currentManeuver =
+    currentStep?.navigationInstruction?.maneuver || "";
+
+  const nextManeuver =
+    nextStep?.navigationInstruction?.maneuver || "";
+
+  const currentArrow = maneuverToArrow(currentManeuver);
+  const nextArrow = maneuverToArrow(nextManeuver);
+
+  const left = arrowToLabel(currentArrow);
+  const distance = formatStepDistance(appState.currentStepRemainMeters);
+  const right = arrowToLabel(nextArrow);
+
+  setText("naviDistance", `${left} ${distance} ${right}`);
+
+  const instruction =
+    currentStep?.navigationInstruction?.instructions || "";
+
+  setText("naviInstruction", instruction);
+}
 // ==============================
 // UI
 // ==============================
@@ -724,6 +754,7 @@ function updateCurrentStep() {
       nextArrow: maneuverToArrow(nextManeuver)
     }
   ]);
+  updateNaviStepDisplay();
 }
 
 function getRemainingDistanceToStepEnd(currentLocation, step) {
