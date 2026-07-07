@@ -45,10 +45,27 @@ const BLE = (() => {
       el.textContent = status;
     }
 
-    const btn = document.getElementById("bleToggleButton");
-    if (btn) {
-      btn.textContent = enabled ? `BLE ${status}` : "BLE OFF";
+
+
+  const btn = document.getElementById("bleToggleButton");
+  if (btn) {
+      btn.classList.remove("off", "connecting", "connected");
+
+    if (!enabled) {
+      btn.textContent = "BLE OFF";
+      btn.classList.add("off");
+    } else if (connecting) {
+      btn.textContent = "BLE CONNECTING";
+      btn.classList.add("connecting");
+    } else if (connected) {
+      btn.textContent = "BLE CONNECTED";
+      btn.classList.add("connected");
+    } else {
+      btn.textContent = "BLE DISCONNECTED";
+      btn.classList.add("connecting");
     }
+ }
+    
 
     const dev = document.getElementById("devBleStatus");
     if (dev) {
