@@ -38,6 +38,9 @@
     </div>
   </div>
 
+  <button id="bleToggleButton" onclick="BLE.toggle()">BLE OFF</button>
+  <div id="bleStatus">OFF</div>
+  
   <div class="card destination-card">
     <div class="label">LAST DESTINATION</div>
     <div class="destination">新宿駅</div>
@@ -222,9 +225,10 @@
 
     <div class="dev-card">
       <div class="label">BLE</div>
-      <pre id="devScreenBle">--</pre>
+      <div id="devBleStatus">
+        BLE: OFF
+      </div>
     </div>
-
     <div class="dev-card">
       <div class="label">STATE</div>
       <pre id="devScreenState">--</pre>
@@ -239,7 +243,7 @@
  </div>
 
 </div>
-
+  <script src="ble.js"></script>
   <script src="./app.js?v=001"></script>
 
 <script
