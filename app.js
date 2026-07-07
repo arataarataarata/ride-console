@@ -825,6 +825,12 @@ function getBearingToNextRoutePoint(current, routePoints, minLookAhead = 40) {
   return Math.atan2(dx, dy);
 }
 
+function drawSelfPoint(ctx, x, y) {
+  ctx.fillStyle = "white";
+  ctx.beginPath();
+  ctx.arc(x, y, 10, 0, Math.PI * 2);
+  ctx.fill();
+}
 
 function drawMiniMap(current, routePoints) {
   const canvas = document.getElementById("miniMap");
@@ -847,44 +853,74 @@ function drawMiniMap(current, routePoints) {
   ctx.fillRect(0, 0, W, H);
 
   if (!current || !Array.isArray(routePoints) || routePoints.length < 2) {
-    ctx.fillStyle = "white";
-    ctx.beginPath();
-    ctx.arc(selfX, selfY, 10, 0, Math.PI * 2);
-    ctx.fill();
-
-    console.warn("drawMiniMap skipped:", {
-      current,
-      routePoints
-    });
-
+    drawSelfPoint(ctx, selfX, selfY);
     return;
+  }
+
+  // 現在地に一番近いルート点を探す
+  let nearestIndex = 0;
+  let nearestDist = Infinity;
+
+  for (let i = 0; i < routePoints.length; i++) {
+    const d = getDistanceMeters(current, routePoints[i]);
+    if (d < nearestDist) {
+      nearestDist = d;
+      nearestIndex = i;
+    }
   }
 
   const bearing = getBearingToNextRoutePoint(current, routePoints, 80);
 
-  const cos = Math.cos(-bearing);
-  const sin = Math.sin(-bearing);
+  const cos = Math.cos(bearing);
+  const sin = Math.sin(bearing);
 
-  const scale = 1.2;
+  const scale = 0.7;          // まず小さめ
+  const maxDrawDistance = 400; // 400m先まで描画
 
   ctx.strokeStyle = "white";
   ctx.lineWidth = 10;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
+
   ctx.beginPath();
+  ctx.moveTo(selfX, selfY);
 
-  let started = false;
+  let drawn = false;
 
-  let nearestIndex = 0;
-　let nearestDist = Infinity;
+  // nearestIndexそのものは後ろ側の可能性があるので +1 から描く
+  for (let i = nearestIndex + 1; i < routePoints.length; i++) {
+    const p = routePoints[i];
 
-　for (let i = 0; i < routePoints.length; i++) {
-  　const d = getDistanceMeters(current, routePoints[i]);
-  　if (d < nearestDist) {
-    　nearestDist = d;
-    　nearestIndex = i;
-  　}
-　}
+    const distanceFromCurrent = getDistanceMeters(current, p);
+    if (distanceFromCurrent > maxDrawDistance) break;
+
+    const dx =
+      (p.lng - current.lng) *
+      Math.cos(current.lat * Math.PI / 180) *
+      111320;
+
+    const dy =
+      (p.lat - current.lat) *
+      110540;
+
+    const rx = dx * cos - dy * sin;
+    const ry = dx * sin + dy * cos;
+
+    // 現在地より後ろ側の点は描かない
+    if (ry < 0) continue;
+
+    const x = selfX + rx * scale;
+    const y = selfY - ry * scale;
+
+    ctx.lineTo(x, y);
+    drawn = true;
+  }
+
+  if (drawn) {
+    ctx.stroke();
+  }
+
+  drawSelfPoint(ctx, selfX, selfY);
 }
 // ==============================
 // UI
