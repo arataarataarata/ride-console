@@ -23,6 +23,11 @@ let routePolyline = null;
 
 let developerMode = false;
 
+const MINI_MAP_W = 320;
+const MINI_MAP_H = 320;
+
+const MINI_SELF_X = MINI_MAP_W / 2;   // 160
+const MINI_SELF_Y = MINI_MAP_H * 0.85; // 272
 const appState = {
   screen: "HOME",
   route: null,
@@ -759,8 +764,10 @@ async function recalculateRoute() {
 // ==============================
 // Mini Map
 // ==============================
-function getBearingToNextRoutePoint(current, routePoints, minLookAhead = 30) {
-  if (!current || !routePoints || routePoints.length < 2) return 0;
+function getBearingToNextRoutePoint(current, routePoints, minLookAhead = 40) {
+  if (!current || !routePoints || routePoints.length < 2) {
+    return 0;
+  }
 
   let nearestIndex = 0;
   let nearestDist = Infinity;
@@ -773,41 +780,57 @@ function getBearingToNextRoutePoint(current, routePoints, minLookAhead = 30) {
     }
   }
 
-  // 現在地より先の点を探す
   let target = routePoints[Math.min(nearestIndex + 1, routePoints.length - 1)];
-  let accum = 0;
+  let distanceSum = 0;
 
   for (let i = nearestIndex; i < routePoints.length - 1; i++) {
-    const d = getDistanceMeters(routePoints[i], routePoints[i + 1]);
-    accum += d;
+    distanceSum += getDistanceMeters(routePoints[i], routePoints[i + 1]);
 
-    if (accum >= minLookAhead) {
+    if (distanceSum >= minLookAhead) {
       target = routePoints[i + 1];
       break;
     }
   }
 
-  const dx = (target.lng - current.lng) * Math.cos(current.lat * Math.PI / 180);
-  const dy = target.lat - current.lat;
+  const dx =
+    (target.lng - current.lng) *
+    Math.cos(current.lat * Math.PI / 180) *
+    111320;
 
-  // 北=0、東=90度
+  const dy =
+    (target.lat - current.lat) *
+    110540;
+
+  // 北=0、東=+90度
   return Math.atan2(dx, dy);
 }
-
 function drawMiniMap(current, routePoints) {
   const canvas = document.getElementById("miniMap");
+  if (!canvas || !current || !routePoints || routePoints.length < 2) return;
+
   const ctx = canvas.getContext("2d");
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const selfX = W / 2;
+  const selfY = H * 0.85; // 中央下
+
+  ctx.clearRect(0, 0, W, H);
 
   const bearing = getBearingToNextRoutePoint(current, routePoints, 40);
 
-  const scale = 2.0; // 調整可
-  const cx = MINI_SELF_X;
-  const cy = MINI_SELF_Y;
+  // 40m先の方向を「画面の真上」にする
+  const cos = Math.cos(-bearing);
+  const sin = Math.sin(-bearing);
+
+  const scale = 1.2;
 
   ctx.strokeStyle = "white";
   ctx.lineWidth = 10;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
   ctx.beginPath();
 
   let started = false;
@@ -822,18 +845,17 @@ function drawMiniMap(current, routePoints) {
       (p.lat - current.lat) *
       110540;
 
-    // bearing方向を画面上方向に回転
-    const x = dx * Math.cos(-bearing) - dy * Math.sin(-bearing);
-    const y = dx * Math.sin(-bearing) + dy * Math.cos(-bearing);
+    const rx = dx * cos - dy * sin;
+    const ry = dx * sin + dy * cos;
 
-    const screenX = cx + x * scale;
-    const screenY = cy - y * scale;
+    const x = selfX + rx * scale;
+    const y = selfY - ry * scale;
 
     if (!started) {
-      ctx.moveTo(screenX, screenY);
+      ctx.moveTo(x, y);
       started = true;
     } else {
-      ctx.lineTo(screenX, screenY);
+      ctx.lineTo(x, y);
     }
   }
 
@@ -842,9 +864,10 @@ function drawMiniMap(current, routePoints) {
   // 自車位置
   ctx.fillStyle = "white";
   ctx.beginPath();
-  ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+  ctx.arc(selfX, selfY, 10, 0, Math.PI * 2);
   ctx.fill();
 }
+
 // ==============================
 // UI
 // ==============================
