@@ -646,6 +646,38 @@ body.dev-mode .round-button {
   pointer-events: none;
   z-index: 2;
 }
+
+.developer-toggle {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 10000;
+}
+
+.developer-panel {
+  display: none;
+  position: fixed;
+  top: 64px;
+  right: 12px;
+  z-index: 9999;
+
+  padding: 10px 12px;
+  min-width: 190px;
+
+  background: rgba(0, 0, 0, 0.82);
+  color: #00ff88;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 1.55;
+
+  border: 1px solid rgba(0, 255, 136, 0.45);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+body.dev-mode .developer-panel {
+  display: block;
+}
 window.showScreen = showScreen;
 window.toggleDeveloperMode = toggleDeveloperMode;
 window.selectRouteOption = selectRouteOption;
