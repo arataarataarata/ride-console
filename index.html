@@ -33,13 +33,14 @@
 
     <div class="status-grid">
       <div class="status-chip ok">GPS <strong>OK</strong></div>
-      <div class="status-chip off">BLE <strong>OFF</strong></div>
+      <button id="bleToggleButton" class="ble-button off" onclick="BLE.toggle()">
+        BLE OFF
+      </button>
       <div class="status-chip ok">MAP <strong>OK</strong></div>
     </div>
   </div>
 
-  <button id="bleToggleButton" onclick="BLE.toggle()">BLE OFF</button>
-  <div id="bleStatus">OFF</div>
+
   
   <div class="card destination-card">
     <div class="label">LAST DESTINATION</div>
