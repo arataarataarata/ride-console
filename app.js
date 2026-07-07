@@ -672,6 +672,7 @@ function updateNaviStepDisplay() {
  if (window.BLE && BLE.isEnabled() && BLE.isConnected()) {
 　　//　  const payload = `${currentArrow}|${distance}|${nextArrow}|${currentManeuver}|${instruction}`;
    //    BLE.sendNavigation(payload);
+   console.log("BLE NAVI TEST SEND");
    BLE.sendNavigation("1|100|2|TURN_LEFT|TEST");
 　}
   
