@@ -26,29 +26,29 @@ const BLE = (() => {
   let lastNavigationMessage = "";
   let navigationSending = false;
 
+
   async function sendNavigation(text) {
-    if (!enabled) return false;
-    if (!connected || !characteristic) return false;
-    if (!text) return false;
+  console.log("BLE.sendNavigation called:", text);
 
-  // 同じ内容は送らない
-    if (text === lastNavigationMessage) return true;
-
-  // 前回送信中なら捨てる
-    if (navigationSending) return false;
-
-    navigationSending = true;
-
-    try {
-      const ok = await sendText(text);
-      if (ok) {
-        lastNavigationMessage = text;
-      }
-      return ok;
-    } finally {
-      navigationSending = false;
-    }
+  if (!enabled) {
+    console.log("BLE not enabled");
+    return false;
   }
+
+  if (!connected) {
+    console.log("BLE not connected");
+    return false;
+  }
+
+  if (!characteristic) {
+    console.log("BLE characteristic missing");
+    return false;
+  }
+
+  return await sendText(text);
+}
+
+  
   function isEnabled() {
     return enabled;
   }
@@ -266,35 +266,42 @@ const BLE = (() => {
   }
 
   async function sendText(text) {
-    if (!enabled) return false;
-    if (!connected || !characteristic) return false;
+  console.log("BLE.sendText:", text);
 
-    try {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(text);
+  if (!enabled) return false;
+  if (!connected || !characteristic) return false;
 
-      await characteristic.writeValue(data);
+  try {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
 
-      sendCount++;
-      lastSentText = text;
-      lastError = "";
+    await characteristic.writeValue(data);
 
-      updateStatusUI();
-      return true;
+    console.log("BLE write OK:", text);
 
-    } catch (err) {
-      errorCount++;
-      lastError = err.message || String(err);
+    sendCount++;
+    lastSentText = text;
+    lastError = "";
 
-      connected = false;
-      characteristic = null;
+    updateStatusUI();
+    return true;
 
-      updateStatusUI();
-      scheduleReconnect();
+  } catch (err) {
+    console.log("BLE write ERROR:", err);
 
-      return false;
-    }
+    errorCount++;
+    lastError = err.message || String(err);
+
+    connected = false;
+    characteristic = null;
+
+    updateStatusUI();
+    scheduleReconnect();
+
+    return false;
   }
+}
+
 
   async function sendTime() {
     const now = new Date();
