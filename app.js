@@ -805,27 +805,8 @@ function getBearingToNextRoutePoint(current, routePoints, minLookAhead = 40) {
   return Math.atan2(dx, dy);
 }
 function drawMiniMap() {
-  console.log("drawMiniMap called");
-
   const canvas = document.getElementById("miniMapCanvas");
-  console.log("canvas:", canvas);
-  console.log("route:", appState.route);
-  console.log("currentLocation:", appState.currentLocation);
-
-  if (!canvas) {
-    console.warn("miniMapCanvas not found");
-    return;
-  }
-
-  if (!appState.route) {
-    console.warn("appState.route missing");
-    return;
-  }
-
-  if (!appState.currentLocation) {
-    console.warn("currentLocation missing");
-    return;
-  }
+  if (!canvas || !appState.route || !appState.currentLocation) return;
 
   const ctx = canvas.getContext("2d");
   const w = canvas.width;
@@ -833,15 +814,83 @@ function drawMiniMap() {
 
   ctx.clearRect(0, 0, w, h);
 
-  // テスト描画
+  const encoded = appState.route.polyline?.encodedPolyline;
+  if (!encoded) return;
+
+  const path = google.maps.geometry.encoding.decodePath(encoded);
+  if (!path || path.length < 2) return;
+
+  const current = appState.currentLocation;
+
+  const selfX = w / 2;
+  const selfY = h * 0.72;
+
+  // 表示スケール：半径300m相当
+  const metersPerPixel = 2.0;
+
+  let drawn = false;
+
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 8;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  ctx.beginPath();
+
+  path.forEach((point) => {
+    const p = {
+      lat: point.lat(),
+      lng: point.lng()
+    };
+
+    const dx =
+      google.maps.geometry.spherical.computeDistanceBetween(
+        new google.maps.LatLng(current.lat, current.lng),
+        new google.maps.LatLng(current.lat, p.lng)
+      ) * (p.lng >= current.lng ? 1 : -1);
+
+    const dy =
+      google.maps.geometry.spherical.computeDistanceBetween(
+        new google.maps.LatLng(current.lat, current.lng),
+        new google.maps.LatLng(p.lat, current.lng)
+      ) * (p.lat >= current.lat ? -1 : 1);
+
+    const x = selfX + dx / metersPerPixel;
+    const y = selfY + dy / metersPerPixel;
+
+    // 画面外の点は無視
+    if (x < -50 || x > w + 50 || y < -50 || y > h + 50) {
+      return;
+    }
+
+    if (!drawn) {
+      ctx.moveTo(x, y);
+      drawn = true;
+    } else {
+      ctx.lineTo(x, y);
+    }
+  });
+
+  if (drawn) {
+    ctx.stroke();
+  } else {
+    console.warn("miniMap: no visible route points");
+  }
+
+  // 自車位置
   ctx.fillStyle = "white";
   ctx.beginPath();
-  ctx.arc(w / 2, h / 2, 20, 0, Math.PI * 2);
+  ctx.arc(selfX, selfY, 10, 0, Math.PI * 2);
   ctx.fill();
 
-  console.log("mini map test circle drawn");
+  // デバッグ用：中心線
+  ctx.strokeStyle = "rgba(255,255,255,0.25)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(selfX, 0);
+  ctx.lineTo(selfX, h);
+  ctx.stroke();
 }
-
 // ==============================
 // UI
 // ==============================
