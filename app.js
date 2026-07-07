@@ -35,28 +35,20 @@ const appState = {
 const MANEUVER_ARROW_MAP = {
   DEPART: 99,
   DESTINATION: 98,
-
   STRAIGHT: 3,
-
   TURN_LEFT: 1,
   TURN_RIGHT: 2,
-
   TURN_SLIGHT_LEFT: 4,
   TURN_SLIGHT_RIGHT: 5,
-
   TURN_SHARP_LEFT: 6,
   TURN_SHARP_RIGHT: 7,
-
   UTURN_LEFT: 8,
   UTURN_RIGHT: 9,
-
   MERGE: 10,
   RAMP_LEFT: 11,
   RAMP_RIGHT: 12,
-
   FORK_LEFT: 13,
   FORK_RIGHT: 14,
-
   ROUNDABOUT_LEFT: 15,
   ROUNDABOUT_RIGHT: 16
 };
@@ -66,6 +58,7 @@ function maneuverToArrow(maneuver) {
 
   return MANEUVER_ARROW_MAP[maneuver] ?? 99;
 }
+
 // ==============================
 // Map Style
 // ==============================
