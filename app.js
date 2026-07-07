@@ -717,7 +717,7 @@ async function recalculateRoute() {
   try {
     console.warn("REROUTE START");
 
-    //setText("naviNext", "REROUTING");
+    setText("naviNext", "REROUTING");
 
     const useExpress = currentSelected.type === "EXPRESS";
 
@@ -732,7 +732,7 @@ async function recalculateRoute() {
 
     if (!newRoute) {
       console.warn("REROUTE FAILED");
-    //  setText("naviNext", "REROUTE FAILED");
+      setText("naviNext", "REROUTE FAILED");
       return;
     }
 
