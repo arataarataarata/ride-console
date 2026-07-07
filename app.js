@@ -684,6 +684,15 @@ function checkRouteDeviation() {
       offRouteCount: appState.offRouteCount
     }
   ]);
+  if (appState.offRouteCount >= 3) {
+    console.warn("REROUTE REQUIRED");
+
+    setText("naviNext", "REROUTE REQUIRED");
+
+  // 連続発火防止
+    appState.offRouteCount = 0;
+ }
+  
 }
 // ==============================
 // UI
