@@ -33,7 +33,9 @@ const appState = {
   currentStepIndex: 0,
   currentStepRemainMeters: null
 };
-
+// ==============================
+// arrow
+// ==============================
 const MANEUVER_ARROW_MAP = {
   DEPART: 99,
   DESTINATION: 98,
@@ -61,7 +63,40 @@ function maneuverToArrow(maneuver) {
 
   return MANEUVER_ARROW_MAP[maneuver] ?? 99;
 }
+function arrowToLabel(arrow) {
+  const map = {
+    1: "L",
+    2: "R",
+    3: "↑",
+    4: "SL",
+    5: "SR",
+    6: "HL",
+    7: "HR",
+    8: "U",
+    9: "U",
+    10: "M",
+    11: "RL",
+    12: "RR",
+    13: "FL",
+    14: "FR",
+    15: "RA",
+    16: "RA",
+    98: "🏁",
+    99: "DP"
+  };
 
+  return map[arrow] || "?";
+}
+
+function formatStepDistance(meters) {
+  if (meters == null) return "--";
+
+  if (meters >= 1000) {
+    return `${(meters / 1000).toFixed(1)}km`;
+  }
+
+  return `${Math.round(meters)}m`;
+}
 // ==============================
 // Map Style
 // ==============================
