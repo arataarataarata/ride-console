@@ -718,28 +718,25 @@ body.dev-mode .developer-panel {
     grid-template-columns: 1fr;
   }
 }
-.navi-map {
-  width: 320px;
-  height: 320px;
-  margin: 12px auto;
-  background: #000;
-  border-radius: 16px;
-  overflow: hidden;
+#miniMapContainer {
+  width: 340px;
+  height: 340px;
+  padding: 10px;
+  background: #222;
+  border: 2px solid #555;
+  border-radius: 12px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-#miniMapContainer{
-    width:340px;
-    height:340px;
-
-    padding:10px;
-
-    background:#222;
-    border:2px solid #555;
-    border-radius:12px;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
+#miniMap {
+  width: 320px;
+  height: 320px;
+  background: #000;
+  border: 2px solid #888;
+  box-sizing: border-box;
 }
 window.showScreen = showScreen;
 window.toggleDeveloperMode = toggleDeveloperMode;
