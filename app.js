@@ -58,8 +58,8 @@ const appState = {
 // arrow
 // ==============================
 const MANEUVER_ARROW_MAP = {
-  DEPART: 99,
-  DESTINATION: 98,
+  DEPART: 17,
+  DESTINATION: 18,
   STRAIGHT: 3,
   TURN_LEFT: 1,
   TURN_RIGHT: 2,
