@@ -1348,14 +1348,17 @@ function sendCurrentNaviToBle() {
 
   BLE.sendNavigation(payload);
 }
-
 let bleNaviSenderTimer = null;
 
 function startBleNaviSender() {
   stopBleNaviSender();
+
   sendCurrentNaviToBle();
+  sendCurrentMiniMapToBle();
+
   bleNaviSenderTimer = setInterval(() => {
     sendCurrentNaviToBle();
+    sendCurrentMiniMapToBle();
   }, 3000);
 }
 
@@ -1391,6 +1394,66 @@ function sendCurrentNaviToBle() {
     `${currentArrow}|${distance}|${nextArrow}|${currentManeuver}|${instruction}`;
   BLE.sendNavigation(payload);
 }
+function sendCurrentMiniMapToBle() {
+  if (!window.BLE) return;
+  if (!BLE.isEnabled()) return;
+  if (!BLE.isConnected()) return;
+  if (!appState.route) return;
+  if (!appState.currentLocation) return;
+  if (!appState.routePoints || appState.routePoints.length === 0) return;
+
+  const current = appState.currentLocation;
+  const points = appState.routePoints;
+
+  const MINI_W = 32;
+  const MINI_H = 32;
+  const SELF_X = 16;
+  const SELF_Y = 28;
+
+  const MAP_RANGE_METERS = 500;
+  const SCALE = MINI_W / MAP_RANGE_METERS;
+
+  const bearing = getBearingToNextRoutePoint(current, points, 40);
+  const rad = -bearing * Math.PI / 180;
+
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+
+  const mapPoints = [];
+
+  for (const p of points) {
+    const dxMeters = getDistanceMeters(
+      { lat: current.lat, lng: current.lng },
+      { lat: current.lat, lng: p.lng }
+    ) * (p.lng >= current.lng ? 1 : -1);
+
+    const dyMeters = getDistanceMeters(
+      { lat: current.lat, lng: current.lng },
+      { lat: p.lat, lng: current.lng }
+    ) * (p.lat >= current.lat ? 1 : -1);
+
+    let x = dxMeters * SCALE;
+    let y = -dyMeters * SCALE;
+
+    const rx = x * cos - y * sin;
+    const ry = x * sin + y * cos;
+
+    const sx = Math.round(SELF_X + rx);
+    const sy = Math.round(SELF_Y + ry);
+
+    if (sx >= 0 && sx <= 31 && sy >= 0 && sy <= 31) {
+      mapPoints.push(`${sx},${sy}`);
+    }
+    if (mapPoints.length >= 24) break;
+  }
+
+  if (mapPoints.length < 2) return;
+
+  const payload = `MAP|${mapPoints.join(";")}`;
+
+  BLE.sendText(payload);
+}
+
 // ==============================
 // Expose functions
 // ==============================
