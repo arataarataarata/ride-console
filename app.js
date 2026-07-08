@@ -1321,6 +1321,8 @@ function sendCurrentNaviToBle() {
   if (!BLE.isConnected()) return;
   if (!appState.route) return;
 
+  updateCurrentStep();
+
   const steps = getRouteSteps(appState.route);
   const index = appState.currentStepIndex || 0;
 
@@ -1338,7 +1340,11 @@ function sendCurrentNaviToBle() {
   const currentArrow = maneuverToArrow(currentManeuver);
   const nextArrow = maneuverToArrow(nextManeuver);
 
-  const distance = formatStepDistance(appState.currentStepRemainMeters);
+  const distance = formatStepDistance(
+    appState.currentStepRemainMeters ??
+    currentStep?.distanceMeters ??
+    0
+  );
 
   const instruction =
     currentStep?.navigationInstruction?.instructions || "";
@@ -1348,6 +1354,8 @@ function sendCurrentNaviToBle() {
 
   BLE.sendNavigation(payload);
 }
+
+
 let bleNaviSenderTimer = null;
 
 function startBleNaviSender() {
