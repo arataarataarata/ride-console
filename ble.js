@@ -24,6 +24,9 @@ const BLE = (() => {
   let lastMessage = "";
 
   let navigationSending = false;
+  
+  let writeQueue = [];
+  let writeBusy = false;
 
   async function sendNavigation(text) {
     if (!enabled) return false;
@@ -248,43 +251,16 @@ const BLE = (() => {
     }
   }
 
-  async function sendText(text) {
-  console.log("BLE.sendText:", text);
-
+function sendText(text) {
   if (!enabled) return false;
   if (!connected || !characteristic) return false;
+  if (!text) return false;
 
-  try {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(text);
+  writeQueue.push(text);
+  processWriteQueue();
 
-    await characteristic.writeValue(data);
-
-    console.log("BLE write OK:", text);
-
-    sendCount++;
-    lastSentText = text;
-    lastError = "";
-
-    updateStatusUI();
-    return true;
-
-  } catch (err) {
-    console.log("BLE write ERROR:", err);
-
-    errorCount++;
-    lastError = err.message || String(err);
-
-    connected = false;
-    characteristic = null;
-
-    updateStatusUI();
-    scheduleReconnect();
-
-    return false;
-  }
+  return true;
 }
-
 
   async function sendTime() {
     const now = new Date();
@@ -300,7 +276,52 @@ const BLE = (() => {
 
     return await sendText(text);
   }
+async function processWriteQueue() {
+  if (writeBusy) return;
+  if (!enabled) return;
+  if (!connected || !characteristic) return;
 
+  const text = writeQueue.shift();
+  if (!text) return;
+
+  writeBusy = true;
+
+  try {
+    console.log("BLE.write queued:", text);
+
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+
+    await characteristic.writeValue(data);
+
+    sendCount++;
+    lastSentText = text;
+    lastError = "";
+
+    console.log("BLE write OK:", text);
+
+    updateStatusUI();
+
+  } catch (err) {
+    console.log("BLE write ERROR:", err);
+
+    errorCount++;
+    lastError = err.message || String(err);
+
+    connected = false;
+    characteristic = null;
+
+    updateStatusUI();
+    scheduleReconnect();
+
+  } finally {
+    writeBusy = false;
+
+    setTimeout(() => {
+      processWriteQueue();
+    }, 80);
+  }
+}
   async function sendNavigation(payload) {
     return await sendText(payload);
   }
