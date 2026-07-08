@@ -669,12 +669,18 @@ function updateNaviStepDisplay() {
 
   setText("naviInstruction", instruction);
  
- if (window.BLE && BLE.isEnabled() && BLE.isConnected()) {
-　　//　  const payload = `${currentArrow}|${distance}|${nextArrow}|${currentManeuver}|${instruction}`;
-   //    BLE.sendNavigation(payload);
-   console.log("BLE NAVI TEST SEND");
-   BLE.sendNavigation("1|100|2|TURN_LEFT|TEST");
-　}
+console.log("BLE CHECK", {
+  hasBLE: !!window.BLE,
+  enabled: window.BLE?.isEnabled?.(),
+  connected: window.BLE?.isConnected?.(),
+  status: window.BLE?.getStatus?.()
+});
+
+if (window.BLE && BLE.isEnabled()) {
+  const payload = `${currentArrow}|${distance}|${nextArrow}|${currentManeuver}|${instruction}`;
+  console.log("BLE NAVI TRY:", payload);
+  BLE.sendNavigation(payload);
+}
   
 
 }
