@@ -1349,3 +1349,132 @@ input::placeholder {
   color: #ffffff !important;
   border-color: #555 !important;
 }
+/* ==============================
+   NAVI monochrome UI
+============================== */
+
+#screen-navi {
+  background: #0b0b0b !important;
+  color: #ffffff !important;
+  padding: 18px 16px 90px !important;
+}
+
+/* 上段：案内カード */
+#screen-navi .rc-navi-main {
+  min-height: 132px;
+  padding: 18px 16px;
+  margin-bottom: 12px;
+
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  background: #151515 !important;
+  border: 1px solid #333 !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+
+/* 矢印 */
+#screen-navi .turn-arrow {
+  width: 86px;
+  min-width: 86px;
+  text-align: center;
+
+  font-size: 72px;
+  line-height: 1;
+  color: #ffffff !important;
+}
+
+/* 文字エリア */
+#screen-navi .rc-navi-text {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 距離 */
+#screen-navi .navi-distance {
+  font-size: 46px;
+  line-height: 1;
+  font-weight: 800;
+  color: #ffffff !important;
+  letter-spacing: -1px;
+}
+
+/* 右左折 */
+#screen-navi .navi-instruction {
+  margin-top: 8px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: #ffffff !important;
+}
+
+/* 道路・補助案内 */
+#screen-navi .navi-road {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #999999 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ETA / TOTAL DISTANCE は非表示 */
+#screen-navi .navi-info-hidden {
+  display: none !important;
+}
+
+/* ミニマップ */
+#screen-navi .rc-mini-map-container,
+#screen-navi #miniMapContainer {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+
+  background: #151515 !important;
+  border: 1px solid #333 !important;
+  border-radius: 10px !important;
+  box-sizing: border-box;
+}
+
+#screen-navi #miniMap {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  margin: 0 auto;
+
+  background: #000 !important;
+  border-radius: 6px;
+}
+
+/* 下部ボタン */
+#screen-navi .rc-bottom-buttons,
+#screen-navi .bottom-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+#screen-navi .bottom-buttons button {
+  flex: 1;
+  height: 48px;
+
+  background: #151515 !important;
+  color: #ffffff !important;
+  border: 1px solid #333 !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+
+/* ENDも赤にしない。一旦モノクロ統一 */
+#screen-navi .danger-button {
+  background: #151515 !important;
+  color: #ffffff !important;
+  border-color: #444 !important;
+}
