@@ -338,3 +338,4 @@ const BLE = (() => {
     updateStatusUI
   };
 })();
+window.BLE = BLE;
