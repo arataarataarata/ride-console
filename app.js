@@ -994,51 +994,116 @@ function selectRouteOption(selectedButton) {
   selectedButton.classList.add("selected");
 }
 // ==============================
-// Last Route
+// Destination History
 // ==============================
 
-function saveLastRoute(route) {
-  if (!route || !route.name) return;
+const HISTORY_KEY = "rideConsoleDestinationHistory";
+const HISTORY_LIMIT = 10;
 
-  localStorage.setItem(
-    "rideConsoleLastRoute",
-    JSON.stringify(route)
-  );
-
-  updateLastRouteDisplay();
-}
-
-function getLastRoute() {
-  const json = localStorage.getItem("rideConsoleLastRoute");
-  if (!json) return null;
+function getDestinationHistory() {
+  const json = localStorage.getItem(HISTORY_KEY);
+  if (!json) return [];
 
   try {
     return JSON.parse(json);
   } catch (e) {
-    console.warn("Failed to parse last route:", e);
-    return null;
+    console.warn("Failed to parse destination history:", e);
+    return [];
   }
+}
+
+function saveDestinationHistory(history) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+function addDestinationHistory(route) {
+  if (!route || !route.name) return;
+
+  const history = getDestinationHistory();
+
+  const newItem = {
+    name: route.name,
+    lat: route.lat || null,
+    lng: route.lng || null,
+    useToll: route.useToll ?? null,
+    timestamp: Date.now(),
+    favorite: route.favorite || false
+  };
+
+  // 同じ名前は重複させず、最新に上げる
+  const filtered = history.filter(item => item.name !== newItem.name);
+
+  filtered.unshift(newItem);
+
+  saveDestinationHistory(filtered.slice(0, HISTORY_LIMIT));
+  updateHistoryDisplay();
+}
+
+function getLastRoute() {
+  const history = getDestinationHistory();
+  return history.length > 0 ? history[0] : null;
+}
+
+function updateHistoryDisplay() {
+  updateLastRouteDisplay();
 }
 
 function updateLastRouteDisplay() {
   const el = document.getElementById("lastRouteText");
   if (!el) return;
 
-  const route = getLastRoute();
-  el.textContent = route ? route.name : "なし";
+  const lastRoute = getLastRoute();
+  el.textContent = lastRoute ? lastRoute.name : "なし";
 }
 
 function startLastRoute() {
-  const route = getLastRoute();
+  const lastRoute = getLastRoute();
 
-  if (!route) {
-    alert("前回ルートはありません");
+  if (!lastRoute) {
+    alert("履歴がありません");
     return;
   }
 
-  console.log("Start last route:", route);
+  console.log("Start last route:", lastRoute);
+
+  // いったんMAPへ遷移
   showScreen("map");
 }
+
+function deleteHistoryItem(index) {
+  const history = getDestinationHistory();
+
+  if (!history[index]) return;
+
+  const ok = confirm(`「${history[index].name}」を履歴から削除しますか？`);
+  if (!ok) return;
+
+  history.splice(index, 1);
+
+  saveDestinationHistory(history);
+  updateHistoryDisplay();
+}
+
+function toggleFavoriteHistoryItem(index) {
+  const history = getDestinationHistory();
+
+  if (!history[index]) return;
+
+  history[index].favorite = !history[index].favorite;
+
+  saveDestinationHistory(history);
+  updateHistoryDisplay();
+}
+
+// HTML onclick から呼べるようにする
+window.addDestinationHistory = addDestinationHistory;
+window.getDestinationHistory = getDestinationHistory;
+window.getLastRoute = getLastRoute;
+window.startLastRoute = startLastRoute;
+window.deleteHistoryItem = deleteHistoryItem;
+window.toggleFavoriteHistoryItem = toggleFavoriteHistoryItem;
+window.updateHistoryDisplay = updateHistoryDisplay;
+window.updateLastRouteDisplay = updateLastRouteDisplay;
 // ==============================
 // Developer Mode
 // ==============================
