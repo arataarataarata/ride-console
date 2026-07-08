@@ -1,6 +1,6 @@
 // =====================================================
 // Ride Console BLE Module
-// Phase 1: connect / disconnect / reconnect / send time
+// connect / disconnect / reconnect / queued write
 // =====================================================
 
 const BLE = (() => {
@@ -21,20 +21,13 @@ const BLE = (() => {
   let errorCount = 0;
   let lastSentText = "";
   let lastError = "";
-  let lastMessage = "";
 
-  let navigationSending = false;
-  
   let writeQueue = [];
   let writeBusy = false;
 
-  async function sendNavigation(text) {
-    if (!enabled) return false;
-    if (!connected) return false;
-    if (!characteristic) return false;
-    return await sendText(text);
-  }
-  
+  // ==============================
+  // Status
+  // ==============================
   function isEnabled() {
     return enabled;
   }
@@ -53,36 +46,33 @@ const BLE = (() => {
   function updateStatusUI() {
     const status = getStatus();
 
-    const el = document.getElementById("bleStatus");
-    if (el) {
-      el.textContent = status;
+    const statusEl = document.getElementById("bleStatus");
+    if (statusEl) {
+      statusEl.textContent = status;
     }
 
-
-
-  const btn = document.getElementById("bleToggleButton");
-  if (btn) {
+    const btn = document.getElementById("bleToggleButton");
+    if (btn) {
       btn.classList.remove("off", "connecting", "connected");
 
-    if (!enabled) {
-      btn.textContent = "BLE OFF";
-      btn.classList.add("off");
-    } else if (connecting) {
-      btn.textContent = "BLE CONNECTING";
-      btn.classList.add("connecting");
-    } else if (connected) {
-      btn.textContent = "BLE CONNECTED";
-      btn.classList.add("connected");
-    } else {
-      btn.textContent = "BLE DISCONNECTED";
-      btn.classList.add("connecting");
+      if (!enabled) {
+        btn.textContent = "BLE OFF";
+        btn.classList.add("off");
+      } else if (connecting) {
+        btn.textContent = "BLE CONNECTING";
+        btn.classList.add("connecting");
+      } else if (connected) {
+        btn.textContent = "BLE CONNECTED";
+        btn.classList.add("connected");
+      } else {
+        btn.textContent = "BLE DISCONNECTED";
+        btn.classList.add("connecting");
+      }
     }
- }
-    
 
-    const dev = document.getElementById("devBleStatus");
-    if (dev) {
-      dev.innerHTML =
+    const devEl = document.getElementById("devBleStatus");
+    if (devEl) {
+      devEl.innerHTML =
         `BLE: ${status}<br>` +
         `Send: ${sendCount}<br>` +
         `Error: ${errorCount}<br>` +
@@ -91,6 +81,9 @@ const BLE = (() => {
     }
   }
 
+  // ==============================
+  // Enable / Disable
+  // ==============================
   async function toggle() {
     if (enabled) {
       await disable();
@@ -108,11 +101,10 @@ const BLE = (() => {
   async function disable() {
     enabled = false;
     clearReconnectTimer();
+    clearWriteQueue();
 
     await disconnect();
 
-    connected = false;
-    connecting = false;
     device = null;
     server = null;
     characteristic = null;
@@ -120,14 +112,15 @@ const BLE = (() => {
     updateStatusUI();
   }
 
+  // ==============================
+  // Connection
+  // ==============================
   async function connect() {
     if (!enabled) return;
     if (connected || connecting) return;
 
     if (!navigator.bluetooth) {
-      lastError = "Web Bluetooth not supported";
-      errorCount++;
-      updateStatusUI();
+      setError("Web Bluetooth not supported");
       return;
     }
 
@@ -139,57 +132,83 @@ const BLE = (() => {
         filters: [{ services: [SERVICE_UUID] }]
       });
 
-      device.addEventListener("gattserverdisconnected", onDisconnected);
+      device.addEventListener("gattserverdisconnected", handleDisconnected);
 
-      server = await device.gatt.connect();
-
-      const service = await server.getPrimaryService(SERVICE_UUID);
-
-      characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
-
-      connected = true;
-      connecting = false;
-      lastError = "";
-
-      updateStatusUI();
-
-      await sendTime();
+      await connectToDevice();
 
     } catch (err) {
-      connected = false;
-      connecting = false;
-      characteristic = null;
-      lastError = err.message || String(err);
-      errorCount++;
-
-      updateStatusUI();
-
-      if (enabled) {
-        scheduleReconnect();
-      }
+      handleConnectionError(err);
     }
+  }
+
+  async function reconnect() {
+    if (!enabled) return;
+    if (connected || connecting) return;
+
+    if (!device) {
+      await connect();
+      return;
+    }
+
+    connecting = true;
+    updateStatusUI();
+
+    try {
+      await connectToDevice();
+    } catch (err) {
+      handleConnectionError(err);
+    }
+  }
+
+  async function connectToDevice() {
+    server = await device.gatt.connect();
+
+    const service = await server.getPrimaryService(SERVICE_UUID);
+    characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+
+    connected = true;
+    connecting = false;
+    lastError = "";
+
+    updateStatusUI();
+
+    await sendTime();
   }
 
   async function disconnect() {
     try {
-      if (device && device.gatt && device.gatt.connected) {
+      if (device?.gatt?.connected) {
         device.gatt.disconnect();
       }
     } catch (err) {
-      lastError = err.message || String(err);
-      errorCount++;
+      setError(err.message || String(err));
     }
 
     connected = false;
     connecting = false;
-    updateStatusUI();
-  }
-
-  function onDisconnected() {
-    connected = false;
     characteristic = null;
 
     updateStatusUI();
+  }
+
+  function handleDisconnected() {
+    connected = false;
+    connecting = false;
+    characteristic = null;
+
+    updateStatusUI();
+
+    if (enabled) {
+      scheduleReconnect();
+    }
+  }
+
+  function handleConnectionError(err) {
+    connected = false;
+    connecting = false;
+    characteristic = null;
+
+    setError(err.message || String(err));
 
     if (enabled) {
       scheduleReconnect();
@@ -212,55 +231,23 @@ const BLE = (() => {
     }
   }
 
-  async function reconnect() {
-    if (!enabled) return;
-    if (!device) {
-      await connect();
-      return;
-    }
+  // ==============================
+  // Send
+  // ==============================
+  function sendText(text) {
+    if (!enabled) return false;
+    if (!connected || !characteristic) return false;
+    if (!text) return false;
 
-    if (connected || connecting) return;
+    writeQueue.push(text);
+    processWriteQueue();
 
-    connecting = true;
-    updateStatusUI();
-
-    try {
-      server = await device.gatt.connect();
-
-      const service = await server.getPrimaryService(SERVICE_UUID);
-
-      characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
-
-      connected = true;
-      connecting = false;
-      lastError = "";
-
-      updateStatusUI();
-
-      await sendTime();
-
-    } catch (err) {
-      connected = false;
-      connecting = false;
-      characteristic = null;
-      lastError = err.message || String(err);
-      errorCount++;
-
-      updateStatusUI();
-      scheduleReconnect();
-    }
+    return true;
   }
 
-function sendText(text) {
-  if (!enabled) return false;
-  if (!connected || !characteristic) return false;
-  if (!text) return false;
-
-  writeQueue.push(text);
-  processWriteQueue();
-
-  return true;
-}
+  async function sendNavigation(payload) {
+    return sendText(payload);
+  }
 
   async function sendTime() {
     const now = new Date();
@@ -272,60 +259,65 @@ function sendText(text) {
     const mi = String(now.getMinutes()).padStart(2, "0");
     const ss = String(now.getSeconds()).padStart(2, "0");
 
-    const text = `TIME|${yyyy}-${mm}-${dd}|${hh}:${mi}:${ss}`;
-
-    return await sendText(text);
+    return sendText(`TIME|${yyyy}-${mm}-${dd}|${hh}:${mi}:${ss}`);
   }
-async function processWriteQueue() {
-  if (writeBusy) return;
-  if (!enabled) return;
-  if (!connected || !characteristic) return;
 
-  const text = writeQueue.shift();
-  if (!text) return;
+  async function processWriteQueue() {
+    if (writeBusy) return;
+    if (!enabled) return;
+    if (!connected || !characteristic) return;
 
-  writeBusy = true;
+    const text = writeQueue.shift();
+    if (!text) return;
 
-  try {
-    console.log("BLE.write queued:", text);
+    writeBusy = true;
 
-    const encoder = new TextEncoder();
-    const data = encoder.encode(text);
+    try {
+      console.log("BLE write:", text);
 
-    await characteristic.writeValue(data);
+      const encoder = new TextEncoder();
+      const data = encoder.encode(text);
 
-    sendCount++;
-    lastSentText = text;
-    lastError = "";
+      await characteristic.writeValue(data);
 
-    console.log("BLE write OK:", text);
+      sendCount++;
+      lastSentText = text;
+      lastError = "";
 
-    updateStatusUI();
+      updateStatusUI();
 
-  } catch (err) {
-    console.log("BLE write ERROR:", err);
+    } catch (err) {
+      console.warn("BLE write ERROR:", err);
 
-    errorCount++;
-    lastError = err.message || String(err);
+      connected = false;
+      characteristic = null;
 
-    connected = false;
-    characteristic = null;
+      setError(err.message || String(err));
+      scheduleReconnect();
 
-    updateStatusUI();
-    scheduleReconnect();
+    } finally {
+      writeBusy = false;
 
-  } finally {
+      setTimeout(() => {
+        processWriteQueue();
+      }, 80);
+    }
+  }
+
+  function clearWriteQueue() {
+    writeQueue = [];
     writeBusy = false;
-
-    setTimeout(() => {
-      processWriteQueue();
-    }, 80);
-  }
-}
-  async function sendNavigation(payload) {
-    return await sendText(payload);
   }
 
+  function setError(message) {
+    lastError = message;
+    errorCount++;
+    updateStatusUI();
+  }
+
+  // ==============================
+  // Public API
+  // ==============================
   return {
     toggle,
     enable,
@@ -333,13 +325,16 @@ async function processWriteQueue() {
     connect,
     disconnect,
     reconnect,
+
     sendText,
     sendTime,
     sendNavigation,
+
     isEnabled,
     isConnected,
     getStatus,
     updateStatusUI
   };
 })();
+
 window.BLE = BLE;
