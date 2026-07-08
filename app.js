@@ -152,7 +152,9 @@ const rideConsoleMapStyle = [
 // ==============================
 // Init
 // ==============================
-document.addEventListener("DOMContentLoaded", restoreDeveloperMode);
+window.addEventListener("DOMContentLoaded", () => {
+  updateLastRouteDisplay();
+});
 
 function initMap() {
 
@@ -987,7 +989,52 @@ function selectRouteOption(selectedButton) {
 
   selectedButton.classList.add("selected");
 }
+// ==============================
+// Last Route
+// ==============================
 
+function saveLastRoute(route) {
+  if (!route || !route.name) return;
+
+  localStorage.setItem(
+    "rideConsoleLastRoute",
+    JSON.stringify(route)
+  );
+
+  updateLastRouteDisplay();
+}
+
+function getLastRoute() {
+  const json = localStorage.getItem("rideConsoleLastRoute");
+  if (!json) return null;
+
+  try {
+    return JSON.parse(json);
+  } catch (e) {
+    console.warn("Failed to parse last route:", e);
+    return null;
+  }
+}
+
+function updateLastRouteDisplay() {
+  const el = document.getElementById("lastRouteText");
+  if (!el) return;
+
+  const route = getLastRoute();
+  el.textContent = route ? route.name : "なし";
+}
+
+function startLastRoute() {
+  const route = getLastRoute();
+
+  if (!route) {
+    alert("前回ルートはありません");
+    return;
+  }
+
+  console.log("Start last route:", route);
+  showScreen("map");
+}
 // ==============================
 // Developer Mode
 // ==============================
