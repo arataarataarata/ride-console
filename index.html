@@ -11,26 +11,32 @@
 
 <div id="app">
 
-
 <!-- HOME -->
-<div id="homeScreen" class="screen">
+<section id="screen-home" class="screen active">
 
-  <div class="rc-header">
-    <div class="rc-title">RIDE CONSOLE</div>
+  <header class="rc-header">
+    <div>
+      <div class="app-kicker">HARLEY DIGITAL COCKPIT</div>
+      <h1 class="rc-title">Ride Console</h1>
+    </div>
+
     <div class="rc-status">
-      GPS <span class="rc-dot ok"></span><br>
-      BLE <span class="rc-dot"></span>
+      <div>GPS <span class="rc-dot ok"></span></div>
+      <button id="bleToggleButton" class="rc-ble-mini off" onclick="BLE.toggle()">
+        BLE
+      </button>
+    </div>
+  </header>
+
+  <div class="rc-search-card" onclick="showScreen('map')">
+    <div class="rc-search-icon">⌕</div>
+    <div>
+      <div class="rc-card-title">行き先を検索</div>
+      <div class="rc-card-sub">目的地を入力してルートを作成</div>
     </div>
   </div>
 
-  <input
-    id="destinationInput"
-    class="rc-search"
-    type="text"
-    placeholder="行き先を検索"
-  >
-
-  <div class="rc-card" onclick="console.log('home route')">
+  <div class="rc-card" onclick="console.log('go home')">
     <div class="rc-card-icon">⌂</div>
     <div class="rc-card-main">
       <div class="rc-card-title">自宅へ帰る</div>
@@ -56,15 +62,26 @@
 
   <div class="rc-section-title">LAST ROUTE</div>
 
-  <div class="rc-card" onclick="console.log('last route')">
+  <div class="rc-card" onclick="showScreen('navi')">
     <div class="rc-card-icon">↻</div>
     <div class="rc-card-main">
       <div class="rc-card-title">前回ルート</div>
-      <div class="rc-card-sub">なし</div>
+      <div class="rc-card-sub">新宿駅</div>
     </div>
   </div>
 
-</div>
+  <div class="rc-section-title">BIKE</div>
+
+  <div class="rc-bike-card">
+    <div>
+      <div class="rc-card-title">FLH1200 Shovelhead Catherine</div>
+      <div class="rc-card-sub">12.6V / Oil --°C</div>
+    </div>
+  </div>
+
+</section>
+
+  
 <!-- MAP -->
 <section id="screen-map" class="screen">
   <button class="round-button" onclick="showScreen('dev')">DEV</button>
