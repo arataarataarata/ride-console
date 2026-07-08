@@ -88,19 +88,18 @@
 <!-- MAP -->
 <section id="screen-map" class="screen">
   <button class="round-button" onclick="showScreen('dev')">DEV</button>
+
   <header class="map-header">
-    
     <div>
       <div class="app-kicker">ROUTE PLANNER</div>
       <h1>Map</h1>
     </div>
-
   </header>
 
   <div class="search-card">
     <div class="label">DESTINATION</div>
     <div class="search-input">
-      <span>🔍</span>
+      <span>⌕</span>
       <input id="destinationInput" type="text" placeholder="目的地を入力">
     </div>
   </div>
@@ -113,10 +112,9 @@
   </div>
 
   <div class="route-section-header">
-    <div>
-      <div class="label">ROUTES</div>
-      <div class="section-title">Choose your ride</div>
-   
+    <div class="label">ROUTES</div>
+    <div class="section-title">Choose your ride</div>
+  </div>
 
   <div id="routeOptions" class="route-options">
     <button class="route-option selected" onclick="selectRouteOption(this)">
@@ -144,10 +142,9 @@
     </button>
   </div>
 
-　<button class="map-start-button" onclick="startNavigation()">
-  START
+  <button class="map-start-button" onclick="startNavigation()">
+    START
   </button>
-
 </section>
 
 <!-- NAVI -->
@@ -163,7 +160,6 @@
     </div>
   </div>
 
-  <!-- 既存JS用にIDは残すが、画面上は非表示 -->
   <div class="navi-info-row navi-info-hidden">
     <div>
       <div class="label">NEXT</div>
@@ -185,31 +181,26 @@
 
   <div class="bottom-buttons rc-bottom-buttons">
     <button class="primary-button">PAUSE</button>
-    <button class="primary-button" onclick="showScreen('dev')">
-      DEV
-    </button>
-    <button class="danger-button" onclick="finishNavigation()">
-      END
-    </button>
+    <button class="primary-button" onclick="showScreen('dev')">DEV</button>
+    <button class="danger-button" onclick="finishNavigation()">END</button>
   </div>
 
 </section>
 
-<div id="developerPanel" class="developer-panel">
-
-    <div class="dev-title">
-        DEVELOPER MODE
-    </div>
-
+<!-- DEV -->
+<section id="screen-dev" class="screen">
+  <div id="developerPanel" class="developer-panel">
+    <div class="dev-title">DEVELOPER MODE</div>
     <div id="devLine1" class="dev-console"></div>
-
     <div id="devLine2" class="dev-console"></div>
+  </div>
+</section>
 
-</div>
+</div><!-- /app -->
 
 <script src="ble.js"></script>
 <script src="./app.js?v=001"></script>
-      
+ 
 <script
   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA9EP_wOYfkx3CCjc8DWZ69ObxhiOPhyMM&libraries=places,geometry&callback=initMap"
   async
