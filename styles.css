@@ -1081,3 +1081,21 @@ body {
   color: #aaa;
   font-size: 12px;
 }
+.history-list {
+  display: block;
+  margin: -4px 0 12px;
+}
+
+.history-list.open {
+  display: block;
+}
+
+.history-empty {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border: 1px solid #333;
+  border-radius: 10px;
+  background: #111;
+  color: #888;
+  font-size: 13px;
+}
