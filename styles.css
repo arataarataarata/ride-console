@@ -956,109 +956,85 @@ body {
   background: var(--panel-pressed);
 }
 /* ==============================
-   HOME UI v2 polish
+   HOME UI v3 simple / readable
 ============================== */
 
 #screen-home {
-  padding: 18px 16px 92px;
-  background:
-    radial-gradient(circle at top right, rgba(255,255,255,0.06), transparent 34%),
-    #0f0f0f;
+  padding: 18px 16px 90px;
+  background: #0b0b0b;
 }
 
 .home-header.rc-header {
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.14);
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #333;
 }
 
 .app-kicker {
   font-size: 10px;
-  letter-spacing: 1.8px;
-  color: #8f8f8f;
+  letter-spacing: 1.4px;
+  color: #888;
 }
 
 .rc-title {
-  font-size: 28px;
+  margin: 2px 0 0;
+  font-size: 26px;
   font-weight: 700;
-  letter-spacing: 0.2px;
+  color: #fff;
 }
 
 .rc-status {
-  padding-top: 2px;
+  font-size: 12px;
+  color: #aaa;
 }
 
-.rc-ble-mini {
-  min-width: 58px;
-  height: 28px;
-  border-radius: 999px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
+.rc-search-card,
+.rc-card,
+.rc-bike-card {
+  background: #151515;
+  border: 1px solid #333;
+  border-radius: 10px;
+  box-shadow: none;
 }
 
 .rc-search-card {
-  min-height: 84px;
-  margin-bottom: 18px;
-  border-color: rgba(255,255,255,0.22);
-  background: linear-gradient(180deg, #262626, #1b1b1b);
-}
-
-.rc-search-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: #111;
-  border: 1px solid #3a3a3a;
-  font-size: 28px;
+  min-height: 70px;
+  margin-bottom: 14px;
 }
 
 .rc-card,
 .rc-bike-card {
-  min-height: 76px;
-  background: #1a1a1a;
-  border-color: rgba(255,255,255,0.16);
+  min-height: 64px;
+  margin-bottom: 10px;
 }
 
-.rc-card {
-  position: relative;
-}
-
-.rc-card::after {
-  content: "›";
-  position: absolute;
-  right: 16px;
-  font-size: 28px;
-  color: #666;
-}
-
+.rc-search-icon,
 .rc-card-icon {
-  width: 42px;
-  font-size: 26px;
-  color: #ddd;
+  width: 34px;
+  font-size: 24px;
+  color: #fff;
 }
 
 .rc-card-title {
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 600;
+  color: #fff;
 }
 
 .rc-card-sub {
   font-size: 12px;
-  color: #8f8f8f;
+  color: #999;
 }
 
 .rc-section-title {
-  margin: 22px 0 10px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255,255,255,0.12);
+  margin: 18px 0 8px;
+  padding-top: 10px;
+  border-top: 1px solid #2a2a2a;
   font-size: 11px;
-  letter-spacing: 1.6px;
+  letter-spacing: 1.2px;
   color: #777;
 }
 
-.rc-bike-card {
-  min-height: 64px;
-  padding: 13px 14px;
+.rc-card::after {
+  content: none;
 }
