@@ -1048,12 +1048,19 @@ function updateHistoryDisplay() {
   updateLastRouteDisplay();
 
   const listEl = document.getElementById("historyList");
-  if (!listEl) return;
+  if (!listEl) {
+    console.warn("historyList element not found");
+    return;
+  }
 
   const history = getDestinationHistory();
 
+  console.log("history:", history);
+
   if (history.length === 0) {
-    listEl.innerHTML = "";
+    listEl.innerHTML = `
+      <div class="history-empty">履歴なし</div>
+    `;
     return;
   }
 
@@ -1067,6 +1074,7 @@ function updateHistoryDisplay() {
     </div>
   `).join("");
 }
+
 function startHistoryItem(index) {
   const history = getDestinationHistory();
   const item = history[index];
