@@ -1343,7 +1343,7 @@ function sendCurrentNaviToBle() {
   BLE.sendNavigation(payload);
 }
 
-llet bleNaviSenderTimer = null;
+let bleNaviSenderTimer = null;
 
 function startBleNaviSender() {
   stopBleNaviSender();
