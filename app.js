@@ -679,15 +679,21 @@ function checkNavigationFinished() {
   }
 }
 
-function finishNavigation(){
-    appState.route=null;
-    appState.currentStepIndex=0;
+function finishNavigation() {
     stopBleNaviSender();
-
-    if(window.BLE && BLE.isEnabled()){
+    if (window.BLE && BLE.isEnabled()) {
         BLE.sendText("NAV_END");
     }
-    showMapScreen();
+
+    clearRoute();
+
+    appState.route = null;
+    appState.currentStepIndex = 0;
+    appState.currentStepRemainMeters = 0;
+    appState.offRouteCount = 0;
+    appState.navigationStarted = false;
+
+    showScreen("home");
 }
 // ==============================
 // re-route
