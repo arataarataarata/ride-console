@@ -1350,7 +1350,7 @@ function startBleNaviSender() {
   sendCurrentNaviToBle();
   bleNaviSenderTimer = setInterval(() => {
     sendCurrentNaviToBle();
-  }, 1000);
+  }, 3000);
 }
 
 function stopBleNaviSender() {
