@@ -606,8 +606,7 @@ function startNavigation() {
   appState.currentStepIndex = 0;
   appState.currentStepRemainMeters = null;
 
-  updateCurrentStep();
-  startBleNaviSender();
+
   const steps = getRouteSteps(selected.route);
 
   console.table(
@@ -634,9 +633,8 @@ function startNavigation() {
   updateCurrentStep();
   updateNaviStepDisplay();
   updateNaviDebug(selected);
-
+  startBleNaviSender();
   showScreen("navi");
-
   drawMiniMap(appState.currentLocation, appState.routePoints);
 }
 
@@ -668,21 +666,26 @@ function updateNaviStepDisplay() {
     currentStep?.navigationInstruction?.instructions || "";
 
   setText("naviInstruction", instruction);
-  if(remainingRouteDistance<20){
+}
+
+function checkNavigationFinished() {
+  if (!appState.route) return;
+
+  const steps = getRouteSteps(appState.route);
+  const index = appState.currentStepIndex || 0;
+
+  if (index >= steps.length - 1) {
     finishNavigation();
   }
 }
 
 function finishNavigation(){
-
     appState.route=null;
-
     appState.currentStepIndex=0;
+    stopBleNaviSender();
 
     if(window.BLE && BLE.isEnabled()){
-
         BLE.sendText("NAV_END");
-
     }
     showMapScreen();
 }
@@ -1340,23 +1343,48 @@ function sendCurrentNaviToBle() {
   BLE.sendNavigation(payload);
 }
 
-let bleNaviSendTimer = null;
+llet bleNaviSenderTimer = null;
 
 function startBleNaviSender() {
   stopBleNaviSender();
-
-  bleNaviSendTimer = setInterval(() => {
+  sendCurrentNaviToBle();
+  bleNaviSenderTimer = setInterval(() => {
     sendCurrentNaviToBle();
   }, 1000);
 }
 
 function stopBleNaviSender() {
-  if (bleNaviSendTimer) {
-    clearInterval(bleNaviSendTimer);
-    bleNaviSendTimer = null;
+  if (bleNaviSenderTimer) {
+    clearInterval(bleNaviSenderTimer);
+    bleNaviSenderTimer = null;
   }
 }
+function sendCurrentNaviToBle() {
+  if (!window.BLE) return;
+  if (!BLE.isEnabled()) return;
+  if (!BLE.isConnected()) return;
+  if (!appState.route) return;
 
+  const steps = getRouteSteps(appState.route);
+  const index = appState.currentStepIndex || 0;
+  const currentStep = steps[index];
+  const nextStep = steps[index + 1];
+
+  if (!currentStep) return;
+
+  const currentManeuver =
+    currentStep?.navigationInstruction?.maneuver || "";
+  const nextManeuver =
+    nextStep?.navigationInstruction?.maneuver || "";
+  const currentArrow = maneuverToArrow(currentManeuver);
+  const nextArrow = maneuverToArrow(nextManeuver);
+  const distance = formatStepDistance(appState.currentStepRemainMeters);
+  const instruction =
+    currentStep?.navigationInstruction?.instructions || "";
+  const payload =
+    `${currentArrow}|${distance}|${nextArrow}|${currentManeuver}|${instruction}`;
+  BLE.sendNavigation(payload);
+}
 // ==============================
 // Expose functions
 // ==============================
