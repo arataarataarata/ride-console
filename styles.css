@@ -956,111 +956,109 @@ body {
   background: var(--panel-pressed);
 }
 /* ==============================
-   HOME UI v1
+   HOME UI v2 polish
 ============================== */
-.home-header.rc-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 18px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid #3a3a3a;
+
+#screen-home {
+  padding: 18px 16px 92px;
+  background:
+    radial-gradient(circle at top right, rgba(255,255,255,0.06), transparent 34%),
+    #0f0f0f;
 }
 
+.home-header.rc-header {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.14);
+}
+
+.app-kicker {
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  color: #8f8f8f;
+}
 
 .rc-title {
-  margin: 2px 0 0;
-  font-size: 26px;
-  letter-spacing: 0.5px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 
 .rc-status {
-  text-align: right;
-  font-size: 12px;
-  color: #aaaaaa;
-}
-
-.rc-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-left: 4px;
-  border-radius: 50%;
-  background: #555;
-}
-
-.rc-dot.ok {
-  background: #55dd55;
+  padding-top: 2px;
 }
 
 .rc-ble-mini {
-  margin-top: 6px;
-  padding: 5px 10px;
-  border: 1px solid #3a3a3a;
+  min-width: 58px;
+  height: 28px;
   border-radius: 999px;
-  background: #1f1f1f;
-  color: #aaaaaa;
-  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
 }
 
-.rc-ble-mini.on {
-  color: #55dd55;
+.rc-search-card {
+  min-height: 84px;
+  margin-bottom: 18px;
+  border-color: rgba(255,255,255,0.22);
+  background: linear-gradient(180deg, #262626, #1b1b1b);
 }
 
-.rc-search-card,
+.rc-search-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #111;
+  border: 1px solid #3a3a3a;
+  font-size: 28px;
+}
+
 .rc-card,
 .rc-bike-card {
-  width: 100%;
-  min-height: 72px;
-  margin-bottom: 12px;
-  padding: 14px;
-  box-sizing: border-box;
-  border: 1px solid #3a3a3a;
-  border-radius: 12px;
-  background: #1f1f1f;
-  color: #ffffff;
+  min-height: 76px;
+  background: #1a1a1a;
+  border-color: rgba(255,255,255,0.16);
 }
 
-.rc-search-card,
 .rc-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  position: relative;
 }
 
-.rc-search-card:active,
-.rc-card:active {
-  background: #2b2b2b;
-}
-
-.rc-search-icon,
-.rc-card-icon {
-  width: 38px;
-  text-align: center;
+.rc-card::after {
+  content: "›";
+  position: absolute;
+  right: 16px;
   font-size: 28px;
-  color: #ffffff;
+  color: #666;
 }
 
-.rc-card-main {
-  flex: 1;
+.rc-card-icon {
+  width: 42px;
+  font-size: 26px;
+  color: #ddd;
 }
 
 .rc-card-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 3px;
+  font-size: 17px;
+  font-weight: 700;
 }
 
 .rc-card-sub {
-  font-size: 13px;
-  color: #aaaaaa;
+  font-size: 12px;
+  color: #8f8f8f;
 }
 
 .rc-section-title {
-  margin: 20px 0 8px;
-  padding-top: 12px;
-  border-top: 1px solid #3a3a3a;
-  font-size: 12px;
-  letter-spacing: 1px;
-  color: #aaaaaa;
+  margin: 22px 0 10px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  font-size: 11px;
+  letter-spacing: 1.6px;
+  color: #777;
+}
+
+.rc-bike-card {
+  min-height: 64px;
+  padding: 13px 14px;
 }
