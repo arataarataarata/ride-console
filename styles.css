@@ -1478,3 +1478,68 @@ input::placeholder {
   color: #ffffff !important;
   border-color: #444 !important;
 }
+/* ==============================
+   Developer Panel
+============================== */
+
+.developer-panel {
+
+    margin: 16px;
+
+    padding: 16px;
+
+    background: #151515;
+
+    border: 1px solid #333;
+
+    border-radius: 10px;
+
+    color: #ffffff;
+
+    font-family: Consolas, monospace;
+
+}
+
+.dev-title{
+
+    margin-bottom:16px;
+
+    padding-bottom:10px;
+
+    border-bottom:1px solid #333;
+
+    color:#888;
+
+    font-size:12px;
+
+    letter-spacing:2px;
+
+    font-weight:bold;
+
+}
+
+.dev-console{
+
+    min-height:180px;
+
+    margin-bottom:12px;
+
+    padding:12px;
+
+    background:#0b0b0b;
+
+    border:1px solid #333;
+
+    border-radius:8px;
+
+    white-space:pre-wrap;
+
+    word-break:break-word;
+
+    line-height:1.5;
+
+    font-size:13px;
+
+    color:#ddd;
+
+}
