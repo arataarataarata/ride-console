@@ -958,8 +958,7 @@ body {
 /* ==============================
    HOME UI v1
 ============================== */
-
-.rc-header {
+.home-header.rc-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -967,6 +966,7 @@ body {
   padding-bottom: 14px;
   border-bottom: 1px solid #3a3a3a;
 }
+
 
 .rc-title {
   margin: 2px 0 0;
