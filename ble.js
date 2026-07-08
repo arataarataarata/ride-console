@@ -23,31 +23,14 @@ const BLE = (() => {
   let lastError = "";
   let lastMessage = "";
 
-  let lastNavigationMessage = "";
   let navigationSending = false;
 
-
   async function sendNavigation(text) {
-  console.log("BLE.sendNavigation called:", text);
-
-  if (!enabled) {
-    console.log("BLE not enabled");
-    return false;
+    if (!enabled) return false;
+    if (!connected) return false;
+    if (!characteristic) return false;
+    return await sendText(text);
   }
-
-  if (!connected) {
-    console.log("BLE not connected");
-    return false;
-  }
-
-  if (!characteristic) {
-    console.log("BLE characteristic missing");
-    return false;
-  }
-
-  return await sendText(text);
-}
-
   
   function isEnabled() {
     return enabled;
