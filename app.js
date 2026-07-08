@@ -586,7 +586,11 @@ function drawSelectedRoute(index) {
 // ==============================
 function startNavigation() {
   const selected = routeResults[selectedRouteIndex];
-
+  const destInput = document.getElementById("destinationInput");
+  saveLastRoute({
+    name: destInput?.value || "目的地"
+  });
+  
   if (!selected || !selected.route) {
     alert("Please select route.");
     return;
