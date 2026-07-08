@@ -150,96 +150,49 @@
 
 </section>
 
-    
 <!-- NAVI -->
 <section id="screen-navi" class="screen">
-  <div class="navi-main">
-    <div class="turn-arrow">↱</div>
+
+  <div class="navi-main rc-navi-main">
+    <div class="turn-arrow" id="naviArrow">↱</div>
+
+    <div class="rc-navi-text">
+      <div class="navi-distance" id="naviDistance">460m</div>
+      <div class="navi-instruction" id="naviInstruction">RIGHT</div>
+      <div class="navi-road" id="naviRoad">Route ready</div>
+    </div>
+  </div>
+
+  <!-- 既存JS用にIDは残すが、画面上は非表示 -->
+  <div class="navi-info-row navi-info-hidden">
     <div>
-　  <div class="navi-distance" id="naviDistance">460m</div>
-　　<div class="navi-instruction" id="naviInstruction">RIGHT</div>
-　　<div class="navi-road" id="naviRoad">Route ready</div>
+      <div class="label">NEXT</div>
+      <div id="naviNext">--</div>
     </div>
-  </div>
-
-  <div class="navi-info-row">
-　<div>
-  　<div class="label">NEXT</div>
-  　<div id="naviNext">--</div>
-　</div>
-　<div>
-  　<div class="label">DISTANCE</div>
-  　<div id="naviTotalDistance">--</div>
-　</div>
-　<div>
-  　<div class="label">ETA</div>
-  　<div id="naviEta">--</div>
-　</div>
-  </div>
-
-
-<div id="miniMapContainer">
-  <canvas id="miniMap" width="320" height="320"></canvas>
-</div>
-  
-</div>
-
-<div class="bottom-buttons">
-  <button class="primary-button">PAUSE</button>
-  <button class="primary-button" onclick="showScreen('dev')">
-    DEV
-  </button>
-  <button class="danger-button" onclick="finishNavigation()">
-    END
-  </button>
-</div>
-
- 
-</section>
-
-<!-- DEV -->
-<section id="screen-dev" class="screen">
-  <header class="map-header">
-<button class="round-button" onclick="showScreen('home')">‹</button>
     <div>
-      <div class="app-kicker">DEVELOPER MODE</div>
-      <h1>Dev</h1>
+      <div class="label">DISTANCE</div>
+      <div id="naviTotalDistance">--</div>
     </div>
-    <button class="round-button" onclick="updateDevScreen()">↻</button>
-  </header>
-
-  <div class="dev-screen-grid">
-    <div class="dev-card">
-      <div class="label">GPS</div>
-      <pre id="devScreenGps">--</pre>
-    </div>
-
-    <div class="dev-card">
-      <div class="label">ROUTE</div>
-      <pre id="devScreenRoute">--</pre>
-    </div>
-
-    <div class="dev-card">
-      <div class="label">STEP</div>
-      <pre id="devScreenStep">--</pre>
-    </div>
-
-    <div class="dev-card">
-      <div class="label">NAVIGATION</div>
-      <pre id="devScreenNavi">--</pre>
-    </div>
-
-    <div class="dev-card">
-      <div class="label">BLE</div>
-      <div id="devBleStatus">
-        BLE: OFF
-      </div>
-    </div>
-    <div class="dev-card">
-      <div class="label">STATE</div>
-      <pre id="devScreenState">--</pre>
+    <div>
+      <div class="label">ETA</div>
+      <div id="naviEta">--</div>
     </div>
   </div>
+
+  <div id="miniMapContainer" class="rc-mini-map-container">
+    <canvas id="miniMap" width="320" height="320"></canvas>
+  </div>
+
+  <div class="bottom-buttons rc-bottom-buttons">
+    <button class="primary-button">PAUSE</button>
+    <button class="primary-button" onclick="showScreen('dev')">
+      DEV
+    </button>
+    <button class="danger-button" onclick="finishNavigation()">
+      END
+    </button>
+  </div>
+
 </section>
     
  <div id="developerPanel" class="developer-panel">
