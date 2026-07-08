@@ -1099,3 +1099,195 @@ body {
   color: #888;
   font-size: 13px;
 }
+/* ==============================
+   Ride Console Design Unify v1
+   機能は触らず、見た目だけ統一
+============================== */
+
+:root {
+  --rc-bg: #0b0b0b;
+  --rc-panel: #151515;
+  --rc-panel-2: #1b1b1b;
+  --rc-border: #333;
+  --rc-text: #fff;
+  --rc-sub: #999;
+  --rc-muted: #777;
+  --rc-ok: #55dd55;
+  --rc-danger: #ff4040;
+
+  --rc-radius: 10px;
+  --rc-gap: 10px;
+}
+
+/* 全画面共通 */
+body {
+  background: var(--rc-bg);
+  color: var(--rc-text);
+}
+
+.screen {
+  background: var(--rc-bg);
+  color: var(--rc-text);
+  padding: 18px 16px 90px;
+  box-sizing: border-box;
+}
+
+/* 見出し系を統一 */
+h1, h2, h3 {
+  color: var(--rc-text);
+  margin-top: 0;
+}
+
+.app-kicker,
+.label,
+.rc-section-title {
+  color: var(--rc-muted);
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  font-weight: 600;
+}
+
+/* カード系を統一 */
+.card,
+.hero-card,
+.destination-card,
+.bike-card,
+.rc-card,
+.rc-search-card,
+.rc-bike-card,
+.route-card,
+.dev-card,
+.info-card {
+  background: var(--rc-panel);
+  border: 1px solid var(--rc-border);
+  border-radius: var(--rc-radius);
+  color: var(--rc-text);
+  box-shadow: none;
+}
+
+/* カード内の補助文字 */
+.sub,
+.rc-card-sub,
+.dev-sub,
+.route-sub {
+  color: var(--rc-sub);
+}
+
+/* ボタン系を統一 */
+button,
+.big-start-button,
+.secondary-action,
+.ble-button,
+.rc-ble-mini {
+  border-radius: var(--rc-radius);
+  border: 1px solid var(--rc-border);
+  background: var(--rc-panel-2);
+  color: var(--rc-text);
+  box-shadow: none;
+}
+
+button:active,
+.big-start-button:active,
+.secondary-action:active,
+.ble-button:active,
+.rc-card:active,
+.rc-search-card:active {
+  background: #252525;
+}
+
+/* 強い開始ボタンだけ少し目立たせる */
+.big-start-button {
+  background: #222;
+  border-color: #444;
+  font-weight: 700;
+}
+
+/* ステータス系 */
+.status-chip,
+.ble-button,
+.rc-ble-mini {
+  background: #151515;
+  border: 1px solid var(--rc-border);
+  color: var(--rc-sub);
+}
+
+.status-chip.ok,
+.rc-dot.ok {
+  color: var(--rc-ok);
+}
+
+/* 入力欄 */
+input,
+textarea,
+select {
+  background: #111;
+  border: 1px solid var(--rc-border);
+  border-radius: var(--rc-radius);
+  color: var(--rc-text);
+}
+
+input::placeholder {
+  color: #777;
+}
+
+/* MAP画面の地図まわり */
+#map,
+.map-container,
+.route-map {
+  border-radius: var(--rc-radius);
+  border: 1px solid var(--rc-border);
+  overflow: hidden;
+  background: #111;
+}
+
+/* ルート比較・検索結果系 */
+.route-result,
+.route-option,
+.search-result,
+.result-card {
+  background: var(--rc-panel);
+  border: 1px solid var(--rc-border);
+  border-radius: var(--rc-radius);
+  color: var(--rc-text);
+  margin-bottom: var(--rc-gap);
+}
+
+/* NAVI画面 */
+.navi-panel,
+.navi-card,
+.navi-status,
+.mini-map-panel {
+  background: var(--rc-panel);
+  border: 1px solid var(--rc-border);
+  border-radius: var(--rc-radius);
+  color: var(--rc-text);
+}
+
+/* DEV画面 */
+.dev-section,
+.debug-section,
+.debug-card {
+  background: var(--rc-panel);
+  border: 1px solid var(--rc-border);
+  border-radius: var(--rc-radius);
+  color: var(--rc-text);
+}
+
+/* 下部ナビ */
+.bottom-nav {
+  background: #080808;
+  border-top: 1px solid var(--rc-border);
+}
+
+.bottom-nav button {
+  background: transparent;
+  border: none;
+  color: var(--rc-sub);
+  border-radius: 0;
+}
+
+.bottom-nav button.active,
+.bottom-nav button:active {
+  color: var(--rc-text);
+  background: #151515;
+}
