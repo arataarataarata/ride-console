@@ -232,7 +232,8 @@ function setupAutocomplete() {
 
     map.setCenter(selectedDestination);
     map.setZoom(16);
-
+// 追加：目的地を選んだら自動でルート取得
+    calculateRoutes();
     updateSearchDebug();
   });
 }
