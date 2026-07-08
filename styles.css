@@ -804,3 +804,154 @@ window.toggleDeveloperMode = toggleDeveloperMode;
 window.selectRouteOption = selectRouteOption;
 window.calculateRoutes = calculateRoutes;
 window.initMap = initMap;
+
+/* ==============================
+   Ride Console UI v1
+============================== */
+
+:root {
+  --bg: #111111;
+  --panel: #1f1f1f;
+  --panel-pressed: #2b2b2b;
+  --border: #3a3a3a;
+  --text: #ffffff;
+  --subtext: #aaaaaa;
+  --danger: #ff4040;
+  --ok: #55dd55;
+
+  --radius: 12px;
+  --gap: 12px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.screen {
+  padding: 20px 18px;
+  box-sizing: border-box;
+}
+
+/* 共通ヘッダー */
+.rc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.rc-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.rc-status {
+  text-align: right;
+  font-size: 12px;
+  color: var(--subtext);
+  line-height: 1.6;
+}
+
+.rc-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  margin-left: 4px;
+}
+
+.rc-dot.ok {
+  background: var(--ok);
+}
+
+.rc-dot.ng {
+  background: var(--danger);
+}
+
+/* 検索ボックス */
+.rc-search {
+  width: 100%;
+  height: 56px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 18px;
+  padding: 0 16px;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+}
+
+.rc-search::placeholder {
+  color: var(--subtext);
+}
+
+/* カードボタン */
+.rc-card {
+  width: 100%;
+  min-height: 70px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  margin-bottom: var(--gap);
+  cursor: pointer;
+}
+
+.rc-card:active {
+  background: var(--panel-pressed);
+}
+
+.rc-card-icon {
+  width: 36px;
+  text-align: center;
+  font-size: 28px;
+  color: var(--text);
+}
+
+.rc-card-main {
+  flex: 1;
+}
+
+.rc-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.rc-card-sub {
+  font-size: 13px;
+  color: var(--subtext);
+}
+
+/* セクション */
+.rc-section-title {
+  font-size: 12px;
+  color: var(--subtext);
+  letter-spacing: 1px;
+  margin: 20px 0 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+/* 下部メニュー */
+.bottom-nav button {
+  background: #181818;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.bottom-nav button:active {
+  background: var(--panel-pressed);
+}
