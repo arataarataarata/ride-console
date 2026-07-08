@@ -154,6 +154,7 @@ const rideConsoleMapStyle = [
 // ==============================
 window.addEventListener("DOMContentLoaded", () => {
   updateLastRouteDisplay();
+  updateHistoryDisplay();
 });
 
 function initMap() {
