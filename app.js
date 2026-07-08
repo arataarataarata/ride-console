@@ -1519,3 +1519,6 @@ window.selectRouteOption = selectRouteOption;
 window.calculateRoutes = calculateRoutes;
 window.startNavigation = startNavigation;
 window.updateDevScreen = updateDevScreen;
+window.startLastRoute = startLastRoute;
+window.saveLastRoute = saveLastRoute;
+window.updateLastRouteDisplay = updateLastRouteDisplay;
