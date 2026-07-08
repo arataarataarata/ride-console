@@ -1291,3 +1291,61 @@ input::placeholder {
   color: var(--rc-text);
   background: #151515;
 }
+/* ==============================
+   MAP route buttons override
+============================== */
+
+/* ルート候補2つ */
+#screen-map .route-result-card,
+#screen-map .route-choice,
+#screen-map .route-option-card,
+#screen-map .route-card,
+#screen-map .route-option {
+  background: #151515 !important;
+  color: #ffffff !important;
+  border: 1px solid #333 !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+
+/* ルート候補内の文字 */
+#screen-map .route-result-card *,
+#screen-map .route-choice *,
+#screen-map .route-option-card *,
+#screen-map .route-card *,
+#screen-map .route-option * {
+  color: inherit !important;
+}
+
+/* 選択中ルート */
+#screen-map .selected,
+#screen-map .active,
+#screen-map .route-selected,
+#screen-map .selected-route {
+  background: #222 !important;
+  border: 1px solid #666 !important;
+  color: #ffffff !important;
+}
+
+/* START / NAVIGATION 系ボタン */
+#screen-map .start-button,
+#screen-map .start-navigation-button,
+#screen-map .big-start-button,
+#screen-map button[onclick*="start"],
+#screen-map button[onclick*="Navigation"] {
+  background: #1b1b1b !important;
+  color: #ffffff !important;
+  border: 1px solid #555 !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+
+/* オレンジ系の背景が残る場合の保険 */
+#screen-map [style*="orange"],
+#screen-map [style*="#ff"],
+#screen-map [style*="#f90"],
+#screen-map [style*="#f60"] {
+  background: #1b1b1b !important;
+  color: #ffffff !important;
+  border-color: #555 !important;
+}
