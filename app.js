@@ -587,7 +587,7 @@ function drawSelectedRoute(index) {
 function startNavigation() {
   const selected = routeResults[selectedRouteIndex];
   const destInput = document.getElementById("destinationInput");
-  saveLastRoute({
+  addDestinationHistory({
     name: destInput?.value || "目的地"
   });
   
