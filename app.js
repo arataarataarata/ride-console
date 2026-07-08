@@ -1046,8 +1046,53 @@ function getLastRoute() {
 
 function updateHistoryDisplay() {
   updateLastRouteDisplay();
+
+  const listEl = document.getElementById("historyList");
+  if (!listEl) return;
+
+  const history = getDestinationHistory();
+
+  if (history.length === 0) {
+    listEl.innerHTML = "";
+    return;
+  }
+
+  listEl.innerHTML = history.map((item, index) => `
+    <div class="history-item">
+      <div class="history-main" onclick="startHistoryItem(${index})">
+        <div class="history-title">${item.name}</div>
+        <div class="history-sub">${formatHistoryTime(item.timestamp)}</div>
+      </div>
+      <button class="history-delete" onclick="deleteHistoryItem(${index})">削除</button>
+    </div>
+  `).join("");
+}
+function startHistoryItem(index) {
+  const history = getDestinationHistory();
+  const item = history[index];
+
+  if (!item) return;
+
+  console.log("Start history item:", item);
+  showScreen("map");
 }
 
+function toggleHistoryList() {
+  const el = document.getElementById("historyList");
+  if (!el) return;
+
+  el.classList.toggle("open");
+}
+
+function formatHistoryTime(timestamp) {
+  if (!timestamp) return "";
+
+  const d = new Date(timestamp);
+  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+window.startHistoryItem = startHistoryItem;
+window.toggleHistoryList = toggleHistoryList;
 function updateLastRouteDisplay() {
   const el = document.getElementById("lastRouteText");
   if (!el) return;
