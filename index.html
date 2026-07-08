@@ -13,71 +13,58 @@
 
 
 <!-- HOME -->
-<section id="screen-home" class="screen active">
-  <header class="home-header">
-    <div>
-      <div class="app-kicker">HARLEY DIGITAL COCKPIT</div>
-      <h1>Ride Console</h1>
-    </div>
-   
-  </header>
+<div id="homeScreen" class="screen">
 
-  <div class="hero-card">
-    <div class="hero-top">
-      <div>
-        <div class="label">SYSTEM STATUS</div>
-        <div class="hero-title">Ready to Ride</div>
-      </div>
-      <div class="pulse-dot"></div>
-    </div>
-
-    <div class="status-grid">
-      <div class="status-chip ok">GPS <strong>OK</strong></div>
-      <button id="bleToggleButton" class="ble-button off" onclick="BLE.toggle()">
-        BLE OFF
-      </button>
-      <div class="status-chip ok">MAP <strong>OK</strong></div>
+  <div class="rc-header">
+    <div class="rc-title">RIDE CONSOLE</div>
+    <div class="rc-status">
+      GPS <span class="rc-dot ok"></span><br>
+      BLE <span class="rc-dot"></span>
     </div>
   </div>
 
+  <input
+    id="destinationInput"
+    class="rc-search"
+    type="text"
+    placeholder="行き先を検索"
+  >
 
-  
-  <div class="card destination-card">
-    <div class="label">LAST DESTINATION</div>
-    <div class="destination">新宿駅</div>
-    <div class="sub">前回ルートを使用できます</div>
-  </div>
-
-  <button class="big-start-button" onclick="showScreen('navi')">
-    <span>START NAVIGATION</span>
-    <small>safe ride!</small>
-  </button>
-  <div class="action-row">
-    <button class="secondary-action" onclick="showScreen('map')">
-      目的地変更
-    </button>
-    <button class="secondary-action">
-      BLE接続
-    </button>
-    <button class="secondary-action" onclick="showScreen('dev')">
-      DEV
-    </button>
-  </div>
-
-  <div class="bike-card">
-    <div>
-      <div class="label">BIKE</div>
-      <div class="bike-name">FLH1200 Shovelhead Catherine</div>
-    </div>
-    <div class="bike-values">
-      <span>12.6V</span>
-      <span>Oil --°C</span>
+  <div class="rc-card" onclick="console.log('home route')">
+    <div class="rc-card-icon">⌂</div>
+    <div class="rc-card-main">
+      <div class="rc-card-title">自宅へ帰る</div>
+      <div class="rc-card-sub">未設定</div>
     </div>
   </div>
 
- 
-</section>
+  <div class="rc-card" onclick="console.log('favorites')">
+    <div class="rc-card-icon">★</div>
+    <div class="rc-card-main">
+      <div class="rc-card-title">よく行く場所</div>
+      <div class="rc-card-sub">登録なし</div>
+    </div>
+  </div>
 
+  <div class="rc-card" onclick="console.log('history')">
+    <div class="rc-card-icon">◷</div>
+    <div class="rc-card-main">
+      <div class="rc-card-title">履歴</div>
+      <div class="rc-card-sub">最近の目的地</div>
+    </div>
+  </div>
+
+  <div class="rc-section-title">LAST ROUTE</div>
+
+  <div class="rc-card" onclick="console.log('last route')">
+    <div class="rc-card-icon">↻</div>
+    <div class="rc-card-main">
+      <div class="rc-card-title">前回ルート</div>
+      <div class="rc-card-sub">なし</div>
+    </div>
+  </div>
+
+</div>
 <!-- MAP -->
 <section id="screen-map" class="screen">
   <button class="round-button" onclick="showScreen('dev')">DEV</button>
