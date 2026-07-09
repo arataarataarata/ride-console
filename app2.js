@@ -104,6 +104,8 @@ let routePolyline = null;
 
 const appState = {
   screen: "home",
+  const appState = {
+
 
   destination: null,
   routeResults: [],
