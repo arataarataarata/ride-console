@@ -1397,8 +1397,73 @@ class MiniMap {
     }
 
     if (drawn) ctx.stroke();
-
     MiniMap.drawSelfPoint(ctx, selfX, selfY);
+    MiniMap.drawDebugPoints(
+      ctx,
+      current,
+      routePoints,
+      cos,
+      sin,
+      scale,
+      selfX,
+      selfY
+    );
+  }
+
+  static drawDebugPoints(ctx, current, routePoints, cos, sin, scale, selfX, selfY) {
+    if (!current) return;
+
+  // 1. polylineポイント：小さい赤点
+    if (Array.isArray(routePoints)) {
+      ctx.fillStyle = "red";
+
+      routePoints.forEach(point => {
+        const local = MiniMap.toLocalMeters(current, point);
+
+        const rx = local.x * cos - local.y * sin;
+        const ry = local.x * sin + local.y * cos;
+
+        const x = selfX + rx * scale;
+        const y = selfY - ry * scale;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+  // 2. 各ステップ：赤丸
+    const steps = RouteManager.getSteps(appState.route);
+
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 3;
+
+    steps.forEach(step => {
+      if (!step?.polyline?.encodedPolyline) return;
+
+      const path = google.maps.geometry.encoding.decodePath(
+        step.polyline.encodedPolyline
+      );
+
+      if (!path || path.length === 0) return;
+
+      const p = {
+        lat: path[0].lat(),
+        lng: path[0].lng()
+      };
+
+      const local = MiniMap.toLocalMeters(current, p);
+
+      const rx = local.x * cos - local.y * sin;
+      const ry = local.x * sin + local.y * cos;
+
+      const x = selfX + rx * scale;
+      const y = selfY - ry * scale;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 9, 0, Math.PI * 2);
+      ctx.stroke();
+    });
   }
 
   static toBlePoints(current, routePoints) {
