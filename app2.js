@@ -1654,23 +1654,6 @@ function getDestinationInputValue() {
   return input ? input.value : "";
 }
 
-function logRouteSteps(route) {
-  const steps = getRouteSteps(route);
-
-  console.table(
-    steps.map((step, index) => {
-      const maneuver = step.navigationInstruction?.maneuver || "";
-      return {
-        index,
-        distance: step.distanceMeters,
-        maneuver,
-        arrow: maneuverToArrow(maneuver),
-        instruction: step.navigationInstruction?.instructions || ""
-      };
-    })
-  );
-}
-
 function escapeHtml(text) {
   return String(text ?? "")
     .replaceAll("&", "&amp;")
