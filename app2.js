@@ -1332,174 +1332,227 @@ function sendCurrentMiniMapToBle() {
 }
 
 // ==============================
-// 13. Destination History
+// 13. History Manager
 // ==============================
-function getDestinationHistory() {
-  const json = localStorage.getItem(HISTORY_KEY);
-  if (!json) return [];
+class HistoryManager {
+  static getAll() {
+    const json = localStorage.getItem(HISTORY_KEY);
+    if (!json) return [];
 
-  try {
-    return JSON.parse(json);
-  } catch (e) {
-    console.warn("Failed to parse destination history:", e);
-    return [];
+    try {
+      return JSON.parse(json);
+    } catch (e) {
+      console.warn("Failed to parse destination history:", e);
+      return [];
+    }
   }
+
+  static save(history) {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  }
+
+  static add(route) {
+    if (!route?.name) return;
+
+    const history = HistoryManager.getAll();
+
+    const newItem = {
+      name: route.name,
+      lat: route.lat || null,
+      lng: route.lng || null,
+      useToll: route.useToll ?? null,
+      timestamp: Date.now(),
+      favorite: route.favorite || false
+    };
+
+    const filtered = history.filter(item => item.name !== newItem.name);
+    filtered.unshift(newItem);
+
+    HistoryManager.save(filtered.slice(0, HISTORY_LIMIT));
+    HistoryManager.updateDisplay();
+  }
+
+  static getLast() {
+    const history = HistoryManager.getAll();
+    return history.length > 0 ? history[0] : null;
+  }
+
+  static updateDisplay() {
+    HistoryManager.updateLastRouteDisplay();
+
+    const listEl = document.getElementById("historyList");
+    if (!listEl) return;
+
+    const history = HistoryManager.getAll();
+
+    if (history.length === 0) {
+      listEl.innerHTML = `
+        <div class="history-empty">履歴なし</div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = history.map((item, index) => `
+      <div class="history-item">
+        <div class="history-main" onclick="startHistoryItem(${index})">
+          <div class="history-title">${escapeHtml(item.name)}</div>
+          <div class="history-sub">${HistoryManager.formatTime(item.timestamp)}</div>
+        </div>
+        <button class="history-delete" onclick="deleteHistoryItem(${index})">削除</button>
+      </div>
+    `).join("");
+  }
+
+  static updateLastRouteDisplay() {
+    const el = document.getElementById("lastRouteText");
+    if (!el) return;
+
+    const lastRoute = HistoryManager.getLast();
+    el.textContent = lastRoute ? lastRoute.name : "なし";
+  }
+
+  static async startItem(index) {
+    const history = HistoryManager.getAll();
+    const item = history[index];
+
+    if (!item) return;
+
+    if (!item.lat || !item.lng) {
+      console.warn("History item has no coordinates:", item);
+      showScreen("map");
+      return;
+    }
+
+    appState.destination = {
+      name: item.name,
+      lat: item.lat,
+      lng: item.lng
+    };
+
+    const input = document.getElementById("destinationInput");
+    if (input) {
+      input.value = item.name;
+    }
+
+    updateDestinationMarker(appState.destination);
+
+    if (map) {
+      map.setCenter(appState.destination);
+      map.setZoom(16);
+    }
+
+    showScreen("map");
+    await RouteManager.calculateRoutes();
+  }
+
+  static async startLast() {
+    const lastRoute = HistoryManager.getLast();
+
+    if (!lastRoute) {
+      alert("履歴がありません");
+      return;
+    }
+
+    const history = HistoryManager.getAll();
+    const index = history.findIndex(
+      item => item.timestamp === lastRoute.timestamp
+    );
+
+    if (index >= 0) {
+      await HistoryManager.startItem(index);
+    } else {
+      showScreen("map");
+    }
+  }
+
+  static deleteItem(index) {
+    const history = HistoryManager.getAll();
+
+    if (!history[index]) return;
+
+    const ok = confirm(`「${history[index].name}」を履歴から削除しますか？`);
+    if (!ok) return;
+
+    history.splice(index, 1);
+
+    HistoryManager.save(history);
+    HistoryManager.updateDisplay();
+  }
+
+  static toggleFavorite(index) {
+    const history = HistoryManager.getAll();
+
+    if (!history[index]) return;
+
+    history[index].favorite = !history[index].favorite;
+
+    HistoryManager.save(history);
+    HistoryManager.updateDisplay();
+  }
+
+  static toggleList() {
+    const el = document.getElementById("historyList");
+    if (!el) return;
+
+    el.classList.toggle("open");
+  }
+
+  static formatTime(timestamp) {
+    if (!timestamp) return "";
+
+    const d = new Date(timestamp);
+
+    return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  }
+}
+
+// 既存コード互換ラッパー
+function getDestinationHistory() {
+  return HistoryManager.getAll();
 }
 
 function saveDestinationHistory(history) {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  return HistoryManager.save(history);
 }
 
 function addDestinationHistory(route) {
-  if (!route?.name) return;
-
-  const history = getDestinationHistory();
-
-  const newItem = {
-    name: route.name,
-    lat: route.lat || null,
-    lng: route.lng || null,
-    useToll: route.useToll ?? null,
-    timestamp: Date.now(),
-    favorite: route.favorite || false
-  };
-
-  const filtered = history.filter(item => item.name !== newItem.name);
-  filtered.unshift(newItem);
-
-  saveDestinationHistory(filtered.slice(0, HISTORY_LIMIT));
-  updateHistoryDisplay();
+  return HistoryManager.add(route);
 }
 
 function getLastRoute() {
-  const history = getDestinationHistory();
-  return history.length > 0 ? history[0] : null;
+  return HistoryManager.getLast();
 }
 
 function updateHistoryDisplay() {
-  updateLastRouteDisplay();
-
-  const listEl = document.getElementById("historyList");
-  if (!listEl) return;
-
-  const history = getDestinationHistory();
-
-  if (history.length === 0) {
-    listEl.innerHTML = `
-      <div class="history-empty">履歴なし</div>
-    `;
-    return;
-  }
-
-  listEl.innerHTML = history.map((item, index) => `
-    <div class="history-item">
-      <div class="history-main" onclick="startHistoryItem(${index})">
-        <div class="history-title">${escapeHtml(item.name)}</div>
-        <div class="history-sub">${formatHistoryTime(item.timestamp)}</div>
-      </div>
-      <button class="history-delete" onclick="deleteHistoryItem(${index})">削除</button>
-    </div>
-  `).join("");
+  return HistoryManager.updateDisplay();
 }
 
 function updateLastRouteDisplay() {
-  const el = document.getElementById("lastRouteText");
-  if (!el) return;
-
-  const lastRoute = getLastRoute();
-  el.textContent = lastRoute ? lastRoute.name : "なし";
+  return HistoryManager.updateLastRouteDisplay();
 }
 
-async function startHistoryItem(index) {
-  const history = getDestinationHistory();
-  const item = history[index];
-
-  if (!item) return;
-
-  if (!item.lat || !item.lng) {
-    console.warn("History item has no coordinates:", item);
-    showScreen("map");
-    return;
-  }
-
-  appState.destination = {
-    name: item.name,
-    lat: item.lat,
-    lng: item.lng
-  };
-
-  const input = document.getElementById("destinationInput");
-  if (input) {
-    input.value = item.name;
-  }
-
-  updateDestinationMarker(appState.destination);
-
-  if (map) {
-    map.setCenter(appState.destination);
-    map.setZoom(16);
-  }
-
-  showScreen("map");
-  await calculateRoutes();
+function startHistoryItem(index) {
+  return HistoryManager.startItem(index);
 }
 
-async function startLastRoute() {
-  const lastRoute = getLastRoute();
-
-  if (!lastRoute) {
-    alert("履歴がありません");
-    return;
-  }
-
-  const history = getDestinationHistory();
-  const index = history.findIndex(item => item.timestamp === lastRoute.timestamp);
-
-  if (index >= 0) {
-    await startHistoryItem(index);
-  } else {
-    showScreen("map");
-  }
+function startLastRoute() {
+  return HistoryManager.startLast();
 }
 
 function deleteHistoryItem(index) {
-  const history = getDestinationHistory();
-
-  if (!history[index]) return;
-
-  const ok = confirm(`「${history[index].name}」を履歴から削除しますか？`);
-  if (!ok) return;
-
-  history.splice(index, 1);
-
-  saveDestinationHistory(history);
-  updateHistoryDisplay();
+  return HistoryManager.deleteItem(index);
 }
 
 function toggleFavoriteHistoryItem(index) {
-  const history = getDestinationHistory();
-
-  if (!history[index]) return;
-
-  history[index].favorite = !history[index].favorite;
-
-  saveDestinationHistory(history);
-  updateHistoryDisplay();
+  return HistoryManager.toggleFavorite(index);
 }
 
 function toggleHistoryList() {
-  const el = document.getElementById("historyList");
-  if (!el) return;
-
-  el.classList.toggle("open");
+  return HistoryManager.toggleList();
 }
 
 function formatHistoryTime(timestamp) {
-  if (!timestamp) return "";
-
-  const d = new Date(timestamp);
-
-  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  return HistoryManager.formatTime(timestamp);
 }
 // ==============================
 // 14. Developer
