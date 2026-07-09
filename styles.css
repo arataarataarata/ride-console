@@ -1099,6 +1099,26 @@ body {
   color: #888;
   font-size: 13px;
 }
+
+.favorite-list,
+.history-list {
+  display: none;
+}
+
+.favorite-list.open,
+.history-list.open {
+  display: block;
+}
+
+.history-favorite {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: #f5c400;
+  font-size: 22px;
+  cursor: pointer;
+}
 /* ==============================
    Ride Console Design Unify v1
    機能は触らず、見た目だけ統一
