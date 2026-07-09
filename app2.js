@@ -1551,7 +1551,8 @@ class HistoryManager {
 
   static updateDisplay() {
     HistoryManager.updateLastRouteDisplay();
-
+    HistoryManager.updateFavoriteDisplay();
+    
     const listEl = document.getElementById("historyList");
     if (!listEl) return;
 
@@ -1570,7 +1571,11 @@ class HistoryManager {
           <div class="history-title">${escapeHtml(item.name)}</div>
           <div class="history-sub">${HistoryManager.formatTime(item.timestamp)}</div>
         </div>
-        <button class="history-delete" onclick="deleteHistoryItem(${index})">削除</button>
+
+        <button class="history-favorite" onclick="event.stopPropagation(); toggleFavoriteHistoryItem(${index})">
+          ${item.favorite ? "★" : "☆"}
+        </button>
+        <button class="history-delete" onclick="event.stopPropagation(); deleteHistoryItem(${index})">削除</button>
       </div>
     `).join("");
   }
@@ -1684,6 +1689,47 @@ class HistoryManager {
 
     return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   }
+
+  static getFavorites() {
+  return HistoryManager.getAll().filter(item => item.favorite);
+}
+
+static updateFavoriteDisplay() {
+  const listEl = document.getElementById("favoriteList");
+  const countEl = document.getElementById("favoriteCountText");
+
+  if (!listEl) return;
+
+  const favorites = HistoryManager.getFavorites();
+
+  if (countEl) {
+    countEl.textContent =
+      favorites.length > 0 ? `${favorites.length}件登録` : "登録なし";
+  }
+
+  if (favorites.length === 0) {
+    listEl.innerHTML = `
+      <div class="history-empty">登録なし</div>
+    `;
+    return;
+  }
+
+  listEl.innerHTML = favorites.map((item, index) => `
+    <div class="history-item">
+      <div class="history-main" onclick="startFavoriteItem(${index})">
+        <div class="history-title">★ ${escapeHtml(item.name)}</div>
+        <div class="history-sub">${HistoryManager.formatTime(item.timestamp)}</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+static toggleFavoriteList() {
+  const el = document.getElementById("favoriteList");
+  if (!el) return;
+
+  el.classList.toggle("open");
+}
 }
 
 // 既存コード互換ラッパー
@@ -1733,6 +1779,24 @@ function toggleHistoryList() {
 
 function formatHistoryTime(timestamp) {
   return HistoryManager.formatTime(timestamp);
+}
+
+function startFavoriteItem(index) {
+  const favorites = HistoryManager.getFavorites();
+  const item = favorites[index];
+
+  if (!item) return;
+
+  const history = HistoryManager.getAll();
+  const realIndex = history.findIndex(h => h.timestamp === item.timestamp);
+
+  if (realIndex >= 0) {
+    return HistoryManager.startItem(realIndex);
+  }
+}
+
+function toggleFavoriteList() {
+  return HistoryManager.toggleFavoriteList();
 }
 // ==============================
 // 14. Developer
