@@ -1725,15 +1725,25 @@ static updateFavoriteDisplay() {
 }
 
 static toggleFavoriteList() {
-  HistoryManager.updateFavoriteDisplay();
+  console.log("toggleFavoriteList called");
 
   const el = document.getElementById("favoriteList");
-  if (!el) return;
+  console.log("favoriteList el =", el);
+
+  const favorites = HistoryManager.getFavorites();
+  console.log("favorites =", favorites);
+
+  HistoryManager.updateFavoriteDisplay();
+
+  if (!el) {
+    console.warn("favoriteList not found");
+    return;
+  }
 
   el.classList.toggle("open");
 
   console.log("favoriteList class =", el.className);
-  console.log("favorites =", HistoryManager.getFavorites());
+  console.log("favoriteList html =", el.innerHTML);
 }
 }
 // 既存コード互換ラッパー
