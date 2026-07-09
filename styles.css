@@ -1119,6 +1119,16 @@ body {
   font-size: 22px;
   cursor: pointer;
 }
+
+.history-home {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: #ddd;
+  font-size: 20px;
+  cursor: pointer;
+}
 /* ==============================
    Ride Console Design Unify v1
    機能は触らず、見た目だけ統一
