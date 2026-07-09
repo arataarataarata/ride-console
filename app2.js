@@ -1732,25 +1732,16 @@ static updateFavoriteDisplay() {
 }
 
 static toggleFavoriteList() {
-  console.log("toggleFavoriteList called");
-
   const el = document.getElementById("favoriteList");
-  console.log("favoriteList el =", el);
-
   const favorites = HistoryManager.getFavorites();
-  console.log("favorites =", favorites);
 
   HistoryManager.updateFavoriteDisplay();
 
   if (!el) {
-    console.warn("favoriteList not found");
     return;
   }
 
   el.classList.toggle("open");
-
-  console.log("favoriteList class =", el.className);
-  console.log("favoriteList html =", el.innerHTML);
 }
   static getHome() {
   const json = localStorage.getItem(HOME_KEY);
