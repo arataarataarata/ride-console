@@ -998,8 +998,8 @@ body {
 }
 
 .rc-search-card {
-  min-height: 70px;
-  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
 }
 
 .rc-card,
