@@ -34,6 +34,7 @@ const BLE_SEND_INTERVAL_MS = 3000;
 
 const HISTORY_KEY = "rideConsoleDestinationHistory";
 const HISTORY_LIMIT = 10;
+const HOME_KEY = "rideConsoleHome";
 
 const MANEUVER_ARROW_MAP = {
   DEPART: 17,
@@ -1552,6 +1553,7 @@ class HistoryManager {
   static updateDisplay() {
     HistoryManager.updateLastRouteDisplay();
     HistoryManager.updateFavoriteDisplay();
+    HistoryManager.updateHomeDisplay();
     
     const listEl = document.getElementById("historyList");
     if (!listEl) return;
@@ -1745,6 +1747,77 @@ static toggleFavoriteList() {
   console.log("favoriteList class =", el.className);
   console.log("favoriteList html =", el.innerHTML);
 }
+  static getHome() {
+  const json = localStorage.getItem(HOME_KEY);
+  if (!json) return null;
+
+  try {
+    return JSON.parse(json);
+  } catch (e) {
+    console.warn("Failed to parse home:", e);
+    return null;
+  }
+}
+
+static setHome(index) {
+  const history = HistoryManager.getAll();
+  const item = history[index];
+
+  if (!item) return;
+
+  const home = {
+    name: item.name,
+    lat: item.lat || null,
+    lng: item.lng || null,
+    timestamp: Date.now()
+  };
+
+  localStorage.setItem(HOME_KEY, JSON.stringify(home));
+  HistoryManager.updateHomeDisplay();
+
+  alert(`「${item.name}」を自宅に設定しました`);
+}
+
+static updateHomeDisplay() {
+  const el = document.getElementById("homeRouteText");
+  if (!el) return;
+
+  const home = HistoryManager.getHome();
+  el.textContent = home ? home.name : "未設定";
+}
+
+static async startHome() {
+  const home = HistoryManager.getHome();
+
+  if (!home) {
+    alert("自宅が未設定です。履歴から自宅を設定してください。");
+    return;
+  }
+
+  appState.destination = {
+    name: home.name,
+    lat: home.lat,
+    lng: home.lng
+  };
+
+  const input = document.getElementById("destinationInput");
+  if (input) {
+    input.value = home.name;
+  }
+
+  showScreen("map");
+
+  if (!home.lat || !home.lng) {
+    return;
+  }
+
+  MapManager.updateDestinationMarker(appState.destination);
+  MapManager.centerOnDestination(appState.destination);
+
+  await RouteManager.calculateRoutes();
+}
+
+  
 }
 // 既存コード互換ラッパー
 function getDestinationHistory() {
