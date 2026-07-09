@@ -803,47 +803,48 @@ class NavigationManager {
     appState.navigationStarted = true;
   }
 
-  static updateInitialDisplay(selected) {
-    const duration = formatDuration(selected.route.duration);
-    const distance = formatDistance(selected.route.distanceMeters);
+static updateInitialDisplay(selected) {
+  const duration = formatDuration(selected.route.duration);
+  const distance = formatDistance(selected.route.distanceMeters);
 
-    setText("naviDistance", "ready");
-    setText("naviInstruction", selected.type);
-    setText("naviRoad", appState.destination?.name || "Navigation");
+  UIManager.updateNavigationHeader({
+    distanceText: "ready",
+    instructionText: selected.type,
+    roadText: appState.destination?.name || "Navigation",
+    nextText: "READY",
+    totalDistanceText: distance,
+    etaText: duration
+  });
+}
 
-    setText("naviNext", "READY");
-    setText("naviTotalDistance", distance);
-    setText("naviEta", duration);
-  }
+static updateStepDisplay() {
+  if (!appState.route) return;
 
-  static updateStepDisplay() {
-    if (!appState.route) return;
+  const steps = RouteManager.getSteps(appState.route);
+  const index = appState.currentStepIndex || 0;
 
-    const steps = RouteManager.getSteps(appState.route);
-    const index = appState.currentStepIndex || 0;
+  const currentStep = steps[index];
+  const nextStep = steps[index + 1];
 
-    const currentStep = steps[index];
-    const nextStep = steps[index + 1];
+  const currentManeuver = currentStep?.navigationInstruction?.maneuver || "";
+  const nextManeuver = nextStep?.navigationInstruction?.maneuver || "";
 
-    const currentManeuver = currentStep?.navigationInstruction?.maneuver || "";
-    const nextManeuver = nextStep?.navigationInstruction?.maneuver || "";
+  appState.currentArrow = maneuverToArrow(currentManeuver);
+  appState.nextArrow = maneuverToArrow(nextManeuver);
+  appState.currentManeuver = currentManeuver;
+  appState.nextManeuver = nextManeuver;
 
-    appState.currentArrow = maneuverToArrow(currentManeuver);
-    appState.nextArrow = maneuverToArrow(nextManeuver);
-    appState.currentManeuver = currentManeuver;
-    appState.nextManeuver = nextManeuver;
+  const left = arrowToLabel(appState.currentArrow);
+  const distance = formatStepDistance(appState.currentStepRemainMeters);
+  const right = arrowToLabel(appState.nextArrow);
+  const instruction = currentStep?.navigationInstruction?.instructions || "";
 
-    const left = arrowToLabel(appState.currentArrow);
-    const distance = formatStepDistance(appState.currentStepRemainMeters);
-    const right = arrowToLabel(appState.nextArrow);
-
-    setText("naviDistance", `${left} ${distance} ${right}`);
-
-    const instruction = currentStep?.navigationInstruction?.instructions || "";
-    setText("naviInstruction", instruction);
-
-    setText("naviRoad", appState.destination?.name || "Navigation");
-  }
+  UIManager.updateNavigationHeader({
+    distanceText: `${left} ${distance} ${right}`,
+    instructionText: instruction,
+    roadText: appState.destination?.name || "Navigation"
+  });
+}
 
   static updateCurrentStep() {
     if (!appState.route || !appState.currentLocation) {
@@ -1757,28 +1758,6 @@ function toggleDeveloperMode() {
 function restoreDeveloperMode() {
   developerMode = localStorage.getItem("rideConsoleDeveloperMode") === "1";
   document.body.classList.toggle("dev-mode", developerMode);
-}
-
-function updateSearchDebug() {
-  const debugMap = document.getElementById("debugMapStatus");
-  const debugRoute = document.getElementById("debugRouteStatus");
-
-  if (debugMap) {
-    debugMap.textContent = "MAP: PLACE SELECTED";
-  }
-
-  if (debugRoute && appState.destination) {
-    debugRoute.textContent = `DEST: ${appState.destination.name}`;
-  }
-}
-
-function updateNaviDebug(selected) {
-  const debugPanels = document.querySelectorAll("#screen-navi .debug-panel div");
-
-  if (!debugPanels || debugPanels.length < 3) return;
-
-  debugPanels[1].textContent = `ROUTE: ${selected.type}`;
-  debugPanels[2].textContent = "SEND: READY";
 }
 
 function showDevLog(text) {
