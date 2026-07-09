@@ -1577,6 +1577,11 @@ class HistoryManager {
         <button class="history-favorite" onclick="event.stopPropagation(); toggleFavoriteHistoryItem(${index})">
           ${item.favorite ? "★" : "☆"}
         </button>
+
+        <button class="history-home" onclick="event.stopPropagation(); setHomeFromHistory(${index})">
+         ⌂
+        </button>
+
         <button class="history-delete" onclick="event.stopPropagation(); deleteHistoryItem(${index})">削除</button>
       </div>
     `).join("");
@@ -1884,6 +1889,14 @@ function startFavoriteItem(index) {
 
 function toggleFavoriteList() {
   return HistoryManager.toggleFavoriteList();
+}
+
+function setHomeFromHistory(index) {
+  return HistoryManager.setHome(index);
+}
+
+function startHomeRoute() {
+  return HistoryManager.startHome();
 }
 // ==============================
 // 14. Developer
