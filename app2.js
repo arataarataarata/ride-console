@@ -957,206 +957,202 @@ async function recalculateRoute() {
 // ==============================
 // 11. Mini Map
 // ==============================
-function decodeRoutePoints(route) {
-  if (!route?.polyline?.encodedPolyline) {
-    return [];
+class MiniMap {
+  static decodeRoutePoints(route) {
+    if (!route?.polyline?.encodedPolyline) return [];
+
+    if (!google.maps.geometry?.encoding) {
+      console.error("Google Maps geometry library not loaded");
+      return [];
+    }
+
+    const path = google.maps.geometry.encoding.decodePath(
+      route.polyline.encodedPolyline
+    );
+
+    return path.map(point => ({
+      lat: point.lat(),
+      lng: point.lng()
+    }));
   }
 
-  if (!google.maps.geometry?.encoding) {
-    console.error("Google Maps geometry library not loaded");
-    return [];
+  static draw(current, routePoints) {
+    const canvas = document.getElementById("miniMap");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = MINI_MAP.CANVAS_W;
+    canvas.height = MINI_MAP.CANVAS_H;
+
+    const W = canvas.width;
+    const H = canvas.height;
+    const scale = W / MINI_MAP.MAP_RANGE_METERS;
+    const selfX = W * MINI_MAP.SELF_X_RATIO;
+    const selfY = H * MINI_MAP.SELF_Y_RATIO;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, W, H);
+
+    if (!current || !Array.isArray(routePoints) || routePoints.length < 2) {
+      MiniMap.drawSelfPoint(ctx, selfX, selfY);
+      return;
+    }
+
+    const nearestIndex = MiniMap.getNearestRoutePointIndex(current, routePoints);
+    const bearing = MiniMap.getBearingToNextRoutePoint(
+      current,
+      routePoints,
+      MINI_MAP.LOOK_AHEAD_METERS
+    );
+
+    const cos = Math.cos(bearing);
+    const sin = Math.sin(bearing);
+
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 10;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    ctx.beginPath();
+    ctx.moveTo(selfX, selfY);
+
+    let drawn = false;
+
+    for (let i = nearestIndex + 1; i < routePoints.length; i++) {
+      const local = MiniMap.toLocalMeters(current, routePoints[i]);
+
+      const rx = local.x * cos - local.y * sin;
+      const ry = local.x * sin + local.y * cos;
+
+      const x = selfX + rx * scale;
+      const y = selfY - ry * scale;
+
+      ctx.lineTo(x, y);
+      drawn = true;
+    }
+
+    if (drawn) ctx.stroke();
+
+    MiniMap.drawSelfPoint(ctx, selfX, selfY);
   }
 
-  const path = google.maps.geometry.encoding.decodePath(
-    route.polyline.encodedPolyline
-  );
+  static toBlePoints(current, routePoints) {
+    if (!current || !Array.isArray(routePoints) || routePoints.length < 2) {
+      return [];
+    }
 
-  return path.map(point => ({
-    lat: point.lat(),
-    lng: point.lng()
-  }));
+    const nearestIndex = MiniMap.getNearestRoutePointIndex(current, routePoints);
+    const bearing = MiniMap.getBearingToNextRoutePoint(current, routePoints, 40);
+
+    const cos = Math.cos(bearing);
+    const sin = Math.sin(bearing);
+
+    const scale = MINI_MAP.BLE_W / MINI_MAP.MAP_RANGE_METERS;
+    const mapPoints = [];
+
+    for (let i = nearestIndex; i < routePoints.length; i++) {
+      const local = MiniMap.toLocalMeters(current, routePoints[i]);
+
+      const rx = local.x * cos - local.y * sin;
+      const ry = local.x * sin + local.y * cos;
+
+      const sx = Math.round(MINI_MAP.BLE_SELF_X + rx * scale);
+      const sy = Math.round(MINI_MAP.BLE_SELF_Y - ry * scale);
+
+      if (sx >= 0 && sx <= 31 && sy >= 0 && sy <= 31) {
+        mapPoints.push(`${sx},${sy}`);
+      }
+
+      if (mapPoints.length >= MINI_MAP.MAX_BLE_POINTS) break;
+    }
+
+    return mapPoints;
+  }
+
+  static getBearingToNextRoutePoint(
+    current,
+    routePoints,
+    minLookAhead = MINI_MAP.LOOK_AHEAD_METERS
+  ) {
+    if (!current || !Array.isArray(routePoints) || routePoints.length < 2) {
+      return 0;
+    }
+
+    const nearestIndex = MiniMap.getNearestRoutePointIndex(current, routePoints);
+
+    let target = null;
+
+    for (let i = nearestIndex + 1; i < routePoints.length; i++) {
+      const d = getDistanceMeters(current, routePoints[i]);
+
+      if (d >= minLookAhead) {
+        target = routePoints[i];
+        break;
+      }
+    }
+
+    if (!target) {
+      target = routePoints[routePoints.length - 1];
+    }
+
+    const local = MiniMap.toLocalMeters(current, target);
+
+    return Math.atan2(local.x, local.y);
+  }
+
+  static getNearestRoutePointIndex(current, routePoints) {
+    if (!current || !Array.isArray(routePoints) || routePoints.length === 0) {
+      return 0;
+    }
+
+    let nearestIndex = 0;
+    let nearestDist = Infinity;
+
+    for (let i = 0; i < routePoints.length; i++) {
+      const d = getDistanceMeters(current, routePoints[i]);
+
+      if (d < nearestDist) {
+        nearestDist = d;
+        nearestIndex = i;
+      }
+    }
+
+    return nearestIndex;
+  }
+
+  static toLocalMeters(origin, point) {
+    return {
+      x:
+        (point.lng - origin.lng) *
+        Math.cos(origin.lat * Math.PI / 180) *
+        111320,
+      y:
+        (point.lat - origin.lat) *
+        110540
+    };
+  }
+
+  static drawSelfPoint(ctx, x, y) {
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(x, y, 10, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
-function getBearingToNextRoutePoint(current, routePoints, minLookAhead = MINI_MAP.LOOK_AHEAD_METERS) {
-  if (!current || !Array.isArray(routePoints) || routePoints.length < 2) {
-    return 0;
-  }
-
-  let nearestIndex = 0;
-  let nearestDist = Infinity;
-
-  for (let i = 0; i < routePoints.length; i++) {
-    const d = getDistanceMeters(current, routePoints[i]);
-
-    if (d < nearestDist) {
-      nearestDist = d;
-      nearestIndex = i;
-    }
-  }
-
-  let target = null;
-
-  for (let i = nearestIndex + 1; i < routePoints.length; i++) {
-    const d = getDistanceMeters(current, routePoints[i]);
-
-    if (d >= minLookAhead) {
-      target = routePoints[i];
-      break;
-    }
-  }
-
-  if (!target) {
-    target = routePoints[routePoints.length - 1];
-  }
-
-  const dx =
-    (target.lng - current.lng) *
-    Math.cos(current.lat * Math.PI / 180) *
-    111320;
-
-  const dy =
-    (target.lat - current.lat) *
-    110540;
-
-  return Math.atan2(dx, dy);
+// 既存コード互換ラッパー
+function decodeRoutePoints(route) {
+  return MiniMap.decodeRoutePoints(route);
 }
 
 function drawMiniMap(current, routePoints) {
-  const canvas = document.getElementById("miniMap");
-  if (!canvas) return;
-
-  const ctx = canvas.getContext("2d");
-
-  canvas.width = MINI_MAP.CANVAS_W;
-  canvas.height = MINI_MAP.CANVAS_H;
-
-  const W = canvas.width;
-  const H = canvas.height;
-
-  const scale = W / MINI_MAP.MAP_RANGE_METERS;
-  const selfX = W * MINI_MAP.SELF_X_RATIO;
-  const selfY = H * MINI_MAP.SELF_Y_RATIO;
-
-  ctx.clearRect(0, 0, W, H);
-
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, W, H);
-
-  if (!current || !Array.isArray(routePoints) || routePoints.length < 2) {
-    drawSelfPoint(ctx, selfX, selfY);
-    return;
-  }
-
-  const nearestIndex = getNearestRoutePointIndex(current, routePoints);
-  const bearing = getBearingToNextRoutePoint(current, routePoints, MINI_MAP.LOOK_AHEAD_METERS);
-
-  const cos = Math.cos(bearing);
-  const sin = Math.sin(bearing);
-
-  ctx.strokeStyle = "white";
-  ctx.lineWidth = 10;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-
-  ctx.beginPath();
-  ctx.moveTo(selfX, selfY);
-
-  let drawn = false;
-
-  for (let i = nearestIndex + 1; i < routePoints.length; i++) {
-    const p = routePoints[i];
-    const local = toLocalMeters(current, p);
-
-    const rx = local.x * cos - local.y * sin;
-    const ry = local.x * sin + local.y * cos;
-
-    const x = selfX + rx * scale;
-    const y = selfY - ry * scale;
-
-    ctx.lineTo(x, y);
-    drawn = true;
-  }
-
-  if (drawn) {
-    ctx.stroke();
-  }
-
-  drawSelfPoint(ctx, selfX, selfY);
-}
-
-function drawSelfPoint(ctx, x, y) {
-  ctx.fillStyle = "white";
-  ctx.beginPath();
-  ctx.arc(x, y, 10, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function getNearestRoutePointIndex(current, routePoints) {
-  if (!current || !Array.isArray(routePoints) || routePoints.length === 0) {
-    return 0;
-  }
-
-  let nearestIndex = 0;
-  let nearestDist = Infinity;
-
-  for (let i = 0; i < routePoints.length; i++) {
-    const d = getDistanceMeters(current, routePoints[i]);
-
-    if (d < nearestDist) {
-      nearestDist = d;
-      nearestIndex = i;
-    }
-  }
-
-  return nearestIndex;
-}
-
-function toLocalMeters(origin, point) {
-  return {
-    x:
-      (point.lng - origin.lng) *
-      Math.cos(origin.lat * Math.PI / 180) *
-      111320,
-    y:
-      (point.lat - origin.lat) *
-      110540
-  };
+  MiniMap.draw(current, routePoints);
 }
 
 function routePointsToBleMiniMap(current, routePoints) {
-  if (!current || !Array.isArray(routePoints) || routePoints.length < 2) {
-    return [];
-  }
-
-  const nearestIndex = getNearestRoutePointIndex(current, routePoints);
-  const bearing = getBearingToNextRoutePoint(current, routePoints, 40);
-
-  const cos = Math.cos(bearing);
-  const sin = Math.sin(bearing);
-
-  const scale = MINI_MAP.BLE_W / MINI_MAP.MAP_RANGE_METERS;
-  const mapPoints = [];
-
-  for (let i = nearestIndex; i < routePoints.length; i++) {
-    const p = routePoints[i];
-    const local = toLocalMeters(current, p);
-
-    const rx = local.x * cos - local.y * sin;
-    const ry = local.x * sin + local.y * cos;
-
-    const sx = Math.round(MINI_MAP.BLE_SELF_X + rx * scale);
-    const sy = Math.round(MINI_MAP.BLE_SELF_Y - ry * scale);
-
-    if (sx >= 0 && sx <= 31 && sy >= 0 && sy <= 31) {
-      mapPoints.push(`${sx},${sy}`);
-    }
-
-    if (mapPoints.length >= MINI_MAP.MAX_BLE_POINTS) {
-      break;
-    }
-  }
-
-  return mapPoints;
+  return MiniMap.toBlePoints(current, routePoints);
 }
 
 // ==============================
