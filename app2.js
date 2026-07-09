@@ -1725,13 +1725,17 @@ static updateFavoriteDisplay() {
 }
 
 static toggleFavoriteList() {
-  HistoryManager.updateFavoriteDisplay(); // ← 開く前に再描画
+  HistoryManager.updateFavoriteDisplay();
+
   const el = document.getElementById("favoriteList");
   if (!el) return;
-  el.classList.toggle("open");
-}
-}
 
+  el.classList.toggle("open");
+
+  console.log("favoriteList class =", el.className);
+  console.log("favorites =", HistoryManager.getFavorites());
+}
+}
 // 既存コード互換ラッパー
 function getDestinationHistory() {
   return HistoryManager.getAll();
