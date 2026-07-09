@@ -90,8 +90,10 @@
   
 <!-- MAP -->
 <section id="screen-map" class="screen">
+
   <button class="round-button" onclick="showScreen('dev')">DEV</button>
-　<button class="rc-home-button" onclick="showScreen('home')">HOME</button>
+  <button class="rc-home-button" onclick="showScreen('home')">HOME</button>
+
   <header class="map-header">
     <div>
       <div class="app-kicker">ROUTE PLANNER</div>
@@ -103,7 +105,10 @@
     <div class="label">DESTINATION</div>
     <div class="search-input">
       <span>⌕</span>
-      <input id="destinationInput" type="text" placeholder="目的地を入力">
+      <input
+        id="destinationInput"
+        type="text"
+        placeholder="imput destination">
     </div>
   </div>
 
@@ -119,35 +124,17 @@
     <div class="section-title">Choose your ride</div>
   </div>
 
-  <div id="routeOptions" class="route-options">
-    <button class="route-option selected" onclick="selectRouteOption(this)">
-      <div class="route-option-top">
-        <div class="route-name">LOCAL</div>
-        <div class="route-badge">NO TOLL</div>
-      </div>
-      <div class="route-main">38 min</div>
-      <div class="route-meta">
-        <span>12.4 km</span>
-        <span>Free</span>
-      </div>
-    </button>
+  <!-- JavaScriptがここへルート候補を生成 -->
+  <div id="routeOptions" class="route-options"></div>
 
-    <button class="route-option" onclick="selectRouteOption(this)">
-      <div class="route-option-top">
-        <div class="route-name">EXPRESS</div>
-        <div class="route-badge express">FAST</div>
-      </div>
-      <div class="route-main">24 min</div>
-      <div class="route-meta">
-        <span>18.1 km</span>
-        <span>¥630</span>
-      </div>
-    </button>
-  </div>
-
-  <button class="map-start-button" onclick="startNavigation()">
+  <button
+    id="startNavigationButton"
+    class="map-start-button"
+    onclick="startNavigation()"
+    disabled>
     START
   </button>
+
 </section>
 
 <!-- NAVI -->
