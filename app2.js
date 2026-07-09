@@ -105,16 +105,6 @@ appState.map = {
     routePolyline:null
 }
 
-let map = null;
-let autocomplete = null;
-let destinationMarker = null;
-let currentLocationMarker = null;
-let currentAccuracyCircle = null;
-let locationWatchId = null;
-let routePolyline = null;
-let bleNaviSenderTimer = null;
-let developerMode = false;
-
 const appState = {
   screen: "home",
 
@@ -161,7 +151,7 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 function initMap() {
-  map = MapManager.createMap("map", DEFAULT_POSITION);
+  MapManager.createMap("map", DEFAULT_POSITION);
 
   setupAutocomplete();
   startLocationWatch();
@@ -435,7 +425,7 @@ class MapManager {
       return null;
     }
 
-    return new google.maps.Map(el, {
+    appState.map.googleMap = new google.maps.Map(el, {
       center,
       zoom: 14,
       mapTypeControl: false,
@@ -445,31 +435,39 @@ class MapManager {
       gestureHandling: "greedy",
       styles: RIDE_CONSOLE_MAP_STYLE
     });
+
+    return appState.map.googleMap;
+  }
+
+  static getMap() {
+    return appState.map.googleMap;
   }
 
   static updateDestinationMarker(destination) {
-    if (!map || !destination) return;
+    const googleMap = MapManager.getMap();
+    if (!googleMap || !destination) return;
 
-    if (!destinationMarker) {
-      destinationMarker = new google.maps.Marker({
-        map,
+    if (!appState.map.destinationMarker) {
+      appState.map.destinationMarker = new google.maps.Marker({
+        map: googleMap,
         title: "Destination"
       });
     }
 
-    destinationMarker.setPosition(destination);
-    destinationMarker.setTitle(destination.name);
+    appState.map.destinationMarker.setPosition(destination);
+    appState.map.destinationMarker.setTitle(destination.name);
   }
 
   static updateCurrentLocation(lat, lng, accuracy) {
-    if (!map) return;
+    const googleMap = MapManager.getMap();
+    if (!googleMap) return;
 
     const pos = { lat, lng };
 
-    if (!currentLocationMarker) {
-      currentLocationMarker = new google.maps.Marker({
+    if (!appState.map.currentLocationMarker) {
+      appState.map.currentLocationMarker = new google.maps.Marker({
         position: pos,
-        map,
+        map: googleMap,
         title: "Current Location",
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
@@ -481,15 +479,15 @@ class MapManager {
         }
       });
 
-      map.setCenter(pos);
-      map.setZoom(17);
+      googleMap.setCenter(pos);
+      googleMap.setZoom(17);
     } else {
-      currentLocationMarker.setPosition(pos);
+      appState.map.currentLocationMarker.setPosition(pos);
     }
 
-    if (!currentAccuracyCircle) {
-      currentAccuracyCircle = new google.maps.Circle({
-        map,
+    if (!appState.map.accuracyCircle) {
+      appState.map.accuracyCircle = new google.maps.Circle({
+        map: googleMap,
         center: pos,
         radius: accuracy,
         strokeOpacity: 0.4,
@@ -497,12 +495,16 @@ class MapManager {
         fillOpacity: 0.08
       });
     } else {
-      currentAccuracyCircle.setCenter(pos);
-      currentAccuracyCircle.setRadius(accuracy);
+      appState.map.accuracyCircle.setCenter(pos);
+      appState.map.accuracyCircle.setRadius(accuracy);
     }
   }
 
   static drawRoute(routeItem) {
+    const googleMap = MapManager.getMap();
+
+    if (!googleMap) return;
+
     if (!routeItem?.route?.polyline?.encodedPolyline) {
       console.warn("No route polyline:", routeItem);
       return;
@@ -518,9 +520,9 @@ class MapManager {
     const encoded = routeItem.route.polyline.encodedPolyline;
     const path = google.maps.geometry.encoding.decodePath(encoded);
 
-    routePolyline = new google.maps.Polyline({
+    appState.map.routePolyline = new google.maps.Polyline({
       path,
-      map,
+      map: googleMap,
       strokeColor: routeItem.type === "EXPRESS" ? "#4285f4" : "#ffb000",
       strokeOpacity: 0.95,
       strokeWeight: 6
@@ -530,14 +532,16 @@ class MapManager {
   }
 
   static clearRoutePolyline() {
-    if (routePolyline) {
-      routePolyline.setMap(null);
-      routePolyline = null;
+    if (appState.map.routePolyline) {
+      appState.map.routePolyline.setMap(null);
+      appState.map.routePolyline = null;
     }
   }
 
   static fitRouteBounds(path) {
-    if (!map || !path?.length) return;
+    const googleMap = MapManager.getMap();
+
+    if (!googleMap || !path?.length) return;
 
     const bounds = new google.maps.LatLngBounds();
 
@@ -551,17 +555,18 @@ class MapManager {
       bounds.extend(appState.destination);
     }
 
-    map.fitBounds(bounds);
+    googleMap.fitBounds(bounds);
   }
 
   static centerOnDestination(destination) {
-    if (!map || !destination) return;
+    const googleMap = MapManager.getMap();
 
-    map.setCenter(destination);
-    map.setZoom(16);
+    if (!googleMap || !destination) return;
+
+    googleMap.setCenter(destination);
+    googleMap.setZoom(16);
   }
 }
-
 // ==============================
 // 07. Route Manager
 // ==============================
