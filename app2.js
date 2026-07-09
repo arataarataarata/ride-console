@@ -1725,9 +1725,9 @@ static updateFavoriteDisplay() {
 }
 
 static toggleFavoriteList() {
+  HistoryManager.updateFavoriteDisplay(); // ← 開く前に再描画
   const el = document.getElementById("favoriteList");
   if (!el) return;
-
   el.classList.toggle("open");
 }
 }
