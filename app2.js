@@ -95,6 +95,16 @@ const RIDE_CONSOLE_MAP_STYLE = [
 // ==============================
 // 02. State
 // ==============================
+
+appState.map = {
+    googleMap:null,
+    autocomplete:null,
+    destinationMarker:null,
+    currentLocationMarker:null,
+    accuracyCircle:null,
+    routePolyline:null
+}
+
 let map = null;
 let autocomplete = null;
 let destinationMarker = null;
