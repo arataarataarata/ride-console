@@ -621,236 +621,285 @@ function drawSelectedRoute(index) {
 }
 
 // ==============================
-// 09. Navigation
+// 09. Navigation Manager
 // ==============================
-function startNavigation() {
-  const selected = appState.routeResults[appState.selectedRouteIndex];
+class NavigationManager {
+  static start() {
+    const selected = RouteManager.getSelectedRouteItem();
 
-  if (!selected?.route) {
-    alert("Please select route.");
-    return;
+    if (!selected?.route) {
+      alert("Please select route.");
+      return;
+    }
+
+    NavigationManager.saveDestinationToHistory(selected);
+    NavigationManager.initializeRoute(selected);
+    NavigationManager.updateInitialDisplay(selected);
+    NavigationManager.logRouteSteps();
+
+    NavigationManager.updateCurrentStep();
+    NavigationManager.updateStepDisplay();
+
+    MiniMap.draw(appState.currentLocation, appState.routePoints);
+
+    startBleNaviSender();
+    showScreen("navi");
   }
 
-  addDestinationHistory({
-    name: appState.destination?.name || getDestinationInputValue() || "目的地",
-    lat: appState.destination?.lat || null,
-    lng: appState.destination?.lng || null,
-    useToll: selected.type === "EXPRESS"
-  });
+  static finish() {
+    stopBleNaviSender();
 
-  appState.route = selected.route;
-  appState.routePoints = decodeRoutePoints(appState.route);
+    if (window.BLE?.isEnabled?.()) {
+      BLE.sendText("NAV_END");
+    }
 
-  appState.currentStepIndex = 0;
-  appState.currentStepRemainMeters = null;
-  appState.offRouteCount = 0;
-  appState.routeDeviationMeters = null;
-  appState.navigationStarted = true;
+    RouteManager.clearRoute();
 
-  logRouteSteps(appState.route);
+    appState.navigationStarted = false;
 
-  const duration = formatDuration(selected.route.duration);
-  const distance = formatDistance(selected.route.distanceMeters);
-
-  setText("naviDistance", "ready");
-  setText("naviInstruction", selected.type);
-  setText("naviRoad", appState.destination?.name || "Navigation");
-
-  setText("naviNext", "READY");
-  setText("naviTotalDistance", distance);
-  setText("naviEta", duration);
-
-  updateCurrentStep();
-  updateNaviStepDisplay();
-  updateNaviDebug(selected);
-  drawMiniMap(appState.currentLocation, appState.routePoints);
-
-  startBleNaviSender();
-  showScreen("navi");
-}
-
-function finishNavigation() {
-  stopBleNaviSender();
-
-  if (window.BLE?.isEnabled?.()) {
-    BLE.sendText("NAV_END");
+    showScreen("home");
   }
 
-  clearRoute();
-
-  appState.navigationStarted = false;
-
-  showScreen("home");
-}
-
-function updateNaviStepDisplay() {
-  if (!appState.route) return;
-
-  const steps = getRouteSteps(appState.route);
-  const index = appState.currentStepIndex || 0;
-
-  const currentStep = steps[index];
-  const nextStep = steps[index + 1];
-
-  const currentManeuver = currentStep?.navigationInstruction?.maneuver || "";
-  const nextManeuver = nextStep?.navigationInstruction?.maneuver || "";
-
-  const currentArrow = maneuverToArrow(currentManeuver);
-  const nextArrow = maneuverToArrow(nextManeuver);
-
-  appState.currentArrow = currentArrow;
-  appState.nextArrow = nextArrow;
-  appState.currentManeuver = currentManeuver;
-  appState.nextManeuver = nextManeuver;
-
-  const left = arrowToLabel(currentArrow);
-  const distance = formatStepDistance(appState.currentStepRemainMeters);
-  const right = arrowToLabel(nextArrow);
-
-  setText("naviDistance", `${left} ${distance} ${right}`);
-
-  const instruction = currentStep?.navigationInstruction?.instructions || "";
-  setText("naviInstruction", instruction);
-
-  const road = appState.destination?.name || "Navigation";
-  setText("naviRoad", road);
-}
-
-function checkNavigationFinished() {
-  if (!appState.route) return;
-
-  const steps = getRouteSteps(appState.route);
-  const index = appState.currentStepIndex || 0;
-
-  if (steps.length > 0 && index >= steps.length - 1) {
-    finishNavigation();
-  }
-}
-
-function updateCurrentStep() {
-  if (!appState.route || !appState.currentLocation) {
-    return;
+  static saveDestinationToHistory(selected) {
+    addDestinationHistory({
+      name: appState.destination?.name || getDestinationInputValue() || "目的地",
+      lat: appState.destination?.lat || null,
+      lng: appState.destination?.lng || null,
+      useToll: selected.type === "EXPRESS"
+    });
   }
 
-  const steps = getRouteSteps(appState.route);
+  static initializeRoute(selected) {
+    appState.route = selected.route;
+    appState.routePoints = MiniMap.decodeRoutePoints(appState.route);
 
-  if (!steps.length) {
-    return;
+    appState.currentStepIndex = 0;
+    appState.currentStepRemainMeters = null;
+    appState.offRouteCount = 0;
+    appState.routeDeviationMeters = null;
+    appState.navigationStarted = true;
   }
 
-  let index = appState.currentStepIndex || 0;
+  static updateInitialDisplay(selected) {
+    const duration = formatDuration(selected.route.duration);
+    const distance = formatDistance(selected.route.distanceMeters);
 
-  if (index >= steps.length) {
-    index = steps.length - 1;
+    setText("naviDistance", "ready");
+    setText("naviInstruction", selected.type);
+    setText("naviRoad", appState.destination?.name || "Navigation");
+
+    setText("naviNext", "READY");
+    setText("naviTotalDistance", distance);
+    setText("naviEta", duration);
   }
 
-  const remainInfo = getRemainingDistanceToStepEnd(
-    appState.currentLocation,
-    steps[index]
-  );
+  static updateStepDisplay() {
+    if (!appState.route) return;
 
-  if (!remainInfo) {
-    return;
+    const steps = RouteManager.getSteps(appState.route);
+    const index = appState.currentStepIndex || 0;
+
+    const currentStep = steps[index];
+    const nextStep = steps[index + 1];
+
+    const currentManeuver = currentStep?.navigationInstruction?.maneuver || "";
+    const nextManeuver = nextStep?.navigationInstruction?.maneuver || "";
+
+    appState.currentArrow = maneuverToArrow(currentManeuver);
+    appState.nextArrow = maneuverToArrow(nextManeuver);
+    appState.currentManeuver = currentManeuver;
+    appState.nextManeuver = nextManeuver;
+
+    const left = arrowToLabel(appState.currentArrow);
+    const distance = formatStepDistance(appState.currentStepRemainMeters);
+    const right = arrowToLabel(appState.nextArrow);
+
+    setText("naviDistance", `${left} ${distance} ${right}`);
+
+    const instruction = currentStep?.navigationInstruction?.instructions || "";
+    setText("naviInstruction", instruction);
+
+    setText("naviRoad", appState.destination?.name || "Navigation");
   }
 
-  if (
-    remainInfo.routeRemain < STEP_ADVANCE_THRESHOLD_METERS &&
-    index < steps.length - 1
-  ) {
-    index += 1;
-    appState.currentStepIndex = index;
+  static updateCurrentStep() {
+    if (!appState.route || !appState.currentLocation) {
+      return;
+    }
 
-    const nextRemainInfo = getRemainingDistanceToStepEnd(
+    const steps = RouteManager.getSteps(appState.route);
+
+    if (!steps.length) {
+      return;
+    }
+
+    let index = appState.currentStepIndex || 0;
+
+    if (index >= steps.length) {
+      index = steps.length - 1;
+    }
+
+    const remainInfo = NavigationManager.getRemainingDistanceToStepEnd(
       appState.currentLocation,
       steps[index]
     );
 
-    if (nextRemainInfo) {
-      appState.currentStepRemainMeters = nextRemainInfo.remainMeters;
+    if (!remainInfo) {
+      return;
     }
-  } else {
-    appState.currentStepRemainMeters = remainInfo.remainMeters;
+
+    if (
+      remainInfo.routeRemain < STEP_ADVANCE_THRESHOLD_METERS &&
+      index < steps.length - 1
+    ) {
+      index += 1;
+      appState.currentStepIndex = index;
+
+      const nextRemainInfo = NavigationManager.getRemainingDistanceToStepEnd(
+        appState.currentLocation,
+        steps[index]
+      );
+
+      if (nextRemainInfo) {
+        appState.currentStepRemainMeters = nextRemainInfo.remainMeters;
+      }
+    } else {
+      appState.currentStepRemainMeters = remainInfo.remainMeters;
+    }
+
+    const currentStep = steps[index];
+    const nextStep = steps[index + 1];
+
+    const currentManeuver = currentStep?.navigationInstruction?.maneuver || "";
+    const nextManeuver = nextStep?.navigationInstruction?.maneuver || "";
+
+    appState.currentManeuver = currentManeuver;
+    appState.nextManeuver = nextManeuver;
+    appState.currentArrow = maneuverToArrow(currentManeuver);
+    appState.nextArrow = maneuverToArrow(nextManeuver);
+
+    console.table([
+      {
+        currentStepIndex: index,
+        remain: appState.currentStepRemainMeters,
+        routeRemain: remainInfo.routeRemain,
+        directRemain: remainInfo.directRemain,
+        nearestDistance: remainInfo.nearestDistance,
+        nearestIndex: remainInfo.nearestIndex,
+        pointCount: remainInfo.pointCount,
+        currentManeuver,
+        currentArrow: appState.currentArrow,
+        nextManeuver,
+        nextArrow: appState.nextArrow
+      }
+    ]);
+
+    NavigationManager.updateStepDisplay();
+    updateDeveloperPanel();
+    NavigationManager.checkFinished();
   }
 
-  const currentStep = steps[index];
-  const nextStep = steps[index + 1];
-
-  const currentManeuver = currentStep?.navigationInstruction?.maneuver || "";
-  const nextManeuver = nextStep?.navigationInstruction?.maneuver || "";
-
-  appState.currentManeuver = currentManeuver;
-  appState.nextManeuver = nextManeuver;
-  appState.currentArrow = maneuverToArrow(currentManeuver);
-  appState.nextArrow = maneuverToArrow(nextManeuver);
-
-  console.table([
-    {
-      currentStepIndex: index,
-      remain: appState.currentStepRemainMeters,
-      routeRemain: remainInfo.routeRemain,
-      directRemain: remainInfo.directRemain,
-      nearestDistance: remainInfo.nearestDistance,
-      nearestIndex: remainInfo.nearestIndex,
-      pointCount: remainInfo.pointCount,
-      currentManeuver,
-      currentArrow: appState.currentArrow,
-      nextManeuver,
-      nextArrow: appState.nextArrow
+  static getRemainingDistanceToStepEnd(currentLocation, step) {
+    if (!currentLocation || !step?.polyline?.encodedPolyline) {
+      return null;
     }
-  ]);
 
-  updateNaviStepDisplay();
-  updateDeveloperPanel();
-  checkNavigationFinished();
+    const path = google.maps.geometry.encoding.decodePath(
+      step.polyline.encodedPolyline
+    );
+
+    if (!path || path.length < 2) {
+      return null;
+    }
+
+    let nearestIndex = 0;
+    let nearestDistance = Infinity;
+
+    path.forEach((point, index) => {
+      const p = latLngToPlain(point);
+      const d = getDistanceMeters(currentLocation, p);
+
+      if (d < nearestDistance) {
+        nearestDistance = d;
+        nearestIndex = index;
+      }
+    });
+
+    let routeRemain = 0;
+
+    for (let i = nearestIndex; i < path.length - 1; i++) {
+      routeRemain += google.maps.geometry.spherical.computeDistanceBetween(
+        path[i],
+        path[i + 1]
+      );
+    }
+
+    const nearestPoint = latLngToPlain(path[nearestIndex]);
+    const directRemain = getDistanceMeters(currentLocation, nearestPoint);
+    const remainMeters = routeRemain + directRemain;
+
+    return {
+      remainMeters: Math.round(remainMeters),
+      routeRemain: Math.round(routeRemain),
+      directRemain: Math.round(directRemain),
+      nearestDistance: Math.round(nearestDistance),
+      nearestIndex,
+      pointCount: path.length
+    };
+  }
+
+  static checkFinished() {
+    if (!appState.route) return;
+
+    const steps = RouteManager.getSteps(appState.route);
+    const index = appState.currentStepIndex || 0;
+
+    if (steps.length > 0 && index >= steps.length - 1) {
+      NavigationManager.finish();
+    }
+  }
+
+  static logRouteSteps() {
+    const steps = RouteManager.getSteps(appState.route);
+
+    console.table(
+      steps.map((step, index) => {
+        const maneuver = step.navigationInstruction?.maneuver || "";
+        return {
+          index,
+          distance: step.distanceMeters,
+          maneuver,
+          arrow: maneuverToArrow(maneuver),
+          instruction: step.navigationInstruction?.instructions || ""
+        };
+      })
+    );
+  }
+}
+
+// 既存コード互換ラッパー
+function startNavigation() {
+  return NavigationManager.start();
+}
+
+function finishNavigation() {
+  return NavigationManager.finish();
+}
+
+function updateNaviStepDisplay() {
+  return NavigationManager.updateStepDisplay();
+}
+
+function checkNavigationFinished() {
+  return NavigationManager.checkFinished();
+}
+
+function updateCurrentStep() {
+  return NavigationManager.updateCurrentStep();
 }
 
 function getRemainingDistanceToStepEnd(currentLocation, step) {
-  if (!currentLocation || !step?.polyline?.encodedPolyline) {
-    return null;
-  }
-
-  const path = google.maps.geometry.encoding.decodePath(
-    step.polyline.encodedPolyline
-  );
-
-  if (!path || path.length < 2) {
-    return null;
-  }
-
-  let nearestIndex = 0;
-  let nearestDistance = Infinity;
-
-  path.forEach((point, index) => {
-    const p = latLngToPlain(point);
-    const d = getDistanceMeters(currentLocation, p);
-
-    if (d < nearestDistance) {
-      nearestDistance = d;
-      nearestIndex = index;
-    }
-  });
-
-  let routeRemain = 0;
-
-  for (let i = nearestIndex; i < path.length - 1; i++) {
-    routeRemain += google.maps.geometry.spherical.computeDistanceBetween(
-      path[i],
-      path[i + 1]
-    );
-  }
-
-  const nearestPoint = latLngToPlain(path[nearestIndex]);
-  const directRemain = getDistanceMeters(currentLocation, nearestPoint);
-  const remainMeters = routeRemain + directRemain;
-
-  return {
-    remainMeters: Math.round(remainMeters),
-    routeRemain: Math.round(routeRemain),
-    directRemain: Math.round(directRemain),
-    nearestDistance: Math.round(nearestDistance),
-    nearestIndex,
-    pointCount: path.length
-  };
+  return NavigationManager.getRemainingDistanceToStepEnd(currentLocation, step);
 }
 
 // ==============================
