@@ -987,31 +987,50 @@ static updateStepDisplay() {
       return null;
     }
 
-    let nearestIndex = 0;
+    let nearestSegmentIndex = 0;
     let nearestDistance = Infinity;
+    let projectedPoint = null;
+    let distanceFromProjectionToSegmentEnd = 0;
 
-    path.forEach((point, index) => {
-      const p = latLngToPlain(point);
-      const d = getDistanceMeters(currentLocation, p);
+  // 現在地を各線分に投影して、一番近い線分を探す
+    for (let i = 0; i < path.length - 1; i++) {
+      const a = latLngToPlain(path[i]);
+      const b = latLngToPlain(path[i + 1]);
+
+      const projection = NavigationManager.projectPointToSegment(
+        currentLocation,
+        a,
+        b
+      );
+
+      const d = getDistanceMeters(currentLocation, projection.point);
 
       if (d < nearestDistance) {
         nearestDistance = d;
-        nearestIndex = index;
+        nearestSegmentIndex = i;
+        projectedPoint = projection.point;
+
+        distanceFromProjectionToSegmentEnd = getDistanceMeters(
+          projection.point,
+          b
+        );
       }
-    });
+    }
 
-    let routeRemain = 0;
+    if (!projectedPoint) {
+      return null;
+    }
 
-    for (let i = nearestIndex; i < path.length - 1; i++) {
+  // 投影点 → 線分終点
+    let routeRemain = distanceFromProjectionToSegmentEnd;
+
+  // その後の線分を加算
+    for (let i = nearestSegmentIndex + 1; i < path.length - 1; i++) {
       routeRemain += google.maps.geometry.spherical.computeDistanceBetween(
         path[i],
         path[i + 1]
       );
     }
-
-    const nearestPoint = latLngToPlain(path[nearestIndex]);
-    const directRemain = getDistanceMeters(currentLocation, nearestPoint);
-    const remainMeters = routeRemain + directRemain;
 
     const startPoint = latLngToPlain(path[0]);
     const endPoint = latLngToPlain(path[path.length - 1]);
@@ -1019,28 +1038,73 @@ static updateStepDisplay() {
     const distanceToPathStart = getDistanceMeters(currentLocation, startPoint);
     const distanceToPathEnd = getDistanceMeters(currentLocation, endPoint);
 
+    const remainMeters = routeRemain;
+
     appState.navDebug = {
       stepIndex: appState.currentStepIndex,
-      nearestIndex,
+      nearestIndex: nearestSegmentIndex,
+      nearestSegmentIndex,
       pointCount: path.length,
       remainMeters: Math.round(remainMeters),
       routeRemain: Math.round(routeRemain),
-      directRemain: Math.round(directRemain),
+      directRemain: Math.round(nearestDistance),
+      nearestDistance: Math.round(nearestDistance),
       distanceToPathStart: Math.round(distanceToPathStart),
       distanceToPathEnd: Math.round(distanceToPathEnd)
     };
+
     return {
       remainMeters: Math.round(remainMeters),
       routeRemain: Math.round(routeRemain),
-      directRemain: Math.round(directRemain),
+      directRemain: Math.round(nearestDistance),
       nearestDistance: Math.round(nearestDistance),
-      nearestIndex,
+      nearestIndex: nearestSegmentIndex,
+      nearestSegmentIndex,
       pointCount: path.length,
       distanceToPathStart: Math.round(distanceToPathStart),
       distanceToPathEnd: Math.round(distanceToPathEnd)
     };
   }
+  static projectPointToSegment(p, a, b) {
+    const latScale = 111320;
+    const lngScale = 111320 * Math.cos((p.lat * Math.PI) / 180);
 
+    const px = p.lng * lngScale;
+    const py = p.lat * latScale;
+
+    const ax = a.lng * lngScale;
+    const ay = a.lat * latScale;
+
+    const bx = b.lng * lngScale;
+    const by = b.lat * latScale;
+
+    const abx = bx - ax;
+    const aby = by - ay;
+
+    const apx = px - ax;
+    const apy = py - ay;
+
+    const abLenSq = abx * abx + aby * aby;
+
+    let t = 0;
+
+    if (abLenSq > 0) {
+      t = (apx * abx + apy * aby) / abLenSq;
+    }
+
+    t = Math.max(0, Math.min(1, t));
+
+    const projectedX = ax + abx * t;
+    const projectedY = ay + aby * t;
+
+    return {
+      point: {
+        lat: projectedY / latScale,
+        lng: projectedX / lngScale
+      },
+      t
+    };
+  }
   static checkFinished() {
     if (!appState.route) return;
 
