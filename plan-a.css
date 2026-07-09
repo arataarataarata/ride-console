@@ -255,3 +255,60 @@ button{
   flex:1;
   height:48px;
 }
+
+.favorite-list,
+.history-list{
+  display:none;
+  margin:-4px 0 14px 52px;
+  padding-left:10px;
+  border-left:1px solid var(--line);
+}
+
+.favorite-list.open,
+.history-list.open{
+  display:block;
+}
+
+.history-item,
+.favorite-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:52px;
+  margin-bottom:8px;
+  padding:10px 12px;
+  background:#0d0a07;
+  border:1px solid var(--line);
+  border-radius:14px;
+}
+
+.history-main,
+.favorite-main{
+  flex:1;
+  min-width:0;
+}
+
+.history-title,
+.favorite-title{
+  color:var(--text);
+  font-size:14px;
+  font-weight:700;
+}
+
+.history-sub,
+.favorite-sub{
+  margin-top:2px;
+  color:var(--sub);
+  font-size:11px;
+}
+
+.history-delete,
+.history-favorite,
+.history-home{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:var(--panel2);
+  border:1px solid var(--line);
+  color:var(--accent);
+}
