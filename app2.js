@@ -151,16 +151,7 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 function initMap() {
-  map = new google.maps.Map(document.getElementById("map"), {
-    center: DEFAULT_POSITION,
-    zoom: 14,
-    mapTypeControl: false,
-    streetViewControl: false,
-    fullscreenControl: false,
-    zoomControl: false,
-    gestureHandling: "greedy",
-    styles: RIDE_CONSOLE_MAP_STYLE
-  });
+  map = MapManager.createMap("map", DEFAULT_POSITION);
 
   setupAutocomplete();
   startLocationWatch();
@@ -202,61 +193,13 @@ class UIManager {
     selectedButton.classList.add("selected");
   }
 
-  static updateDestinationMarker(destination) {
-    if (!map || !destination) return;
+static updateDestinationMarker(destination) {
+  return MapManager.updateDestinationMarker(destination);
+}
 
-    if (!destinationMarker) {
-      destinationMarker = new google.maps.Marker({
-        map,
-        title: "Destination"
-      });
-    }
-
-    destinationMarker.setPosition(destination);
-    destinationMarker.setTitle(destination.name);
-  }
-
-  static updateCurrentLocationOnMap(lat, lng, accuracy) {
-    if (!map) return;
-
-    const pos = { lat, lng };
-
-    if (!currentLocationMarker) {
-      currentLocationMarker = new google.maps.Marker({
-        position: pos,
-        map,
-        title: "Current Location",
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 7,
-          fillColor: "#ffffff",
-          fillOpacity: 1,
-          strokeColor: "#000000",
-          strokeWeight: 2
-        }
-      });
-
-      map.setCenter(pos);
-      map.setZoom(17);
-    } else {
-      currentLocationMarker.setPosition(pos);
-    }
-
-    if (!currentAccuracyCircle) {
-      currentAccuracyCircle = new google.maps.Circle({
-        map,
-        center: pos,
-        radius: accuracy,
-        strokeOpacity: 0.4,
-        strokeWeight: 1,
-        fillOpacity: 0.08
-      });
-    } else {
-      currentAccuracyCircle.setCenter(pos);
-      currentAccuracyCircle.setRadius(accuracy);
-    }
-  }
-
+static updateCurrentLocationOnMap(lat, lng, accuracy) {
+  return MapManager.updateCurrentLocation(lat, lng, accuracy);
+}
   static updateNavigationHeader({
     distanceText,
     instructionText,
@@ -449,9 +392,8 @@ function setupAutocomplete() {
       name: place.name || place.formatted_address || "Destination"
     };
 
-    updateDestinationMarker(appState.destination);
-    map.setCenter(appState.destination);
-    map.setZoom(16);
+    MapManager.updateDestinationMarker(appState.destination);
+    MapManager.centerOnDestination(appState.destination);
 
     calculateRoutes();
     updateSearchDebug();
@@ -470,6 +412,144 @@ function updateDestinationMarker(destination) {
 
   destinationMarker.setPosition(destination);
   destinationMarker.setTitle(destination.name);
+}
+
+// ==============================
+// 06.5 Map Manager
+// ==============================
+class MapManager {
+  static createMap(elementId, center = DEFAULT_POSITION) {
+    const el = document.getElementById(elementId);
+    if (!el) {
+      console.error(`${elementId} not found`);
+      return null;
+    }
+
+    return new google.maps.Map(el, {
+      center,
+      zoom: 14,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+      zoomControl: false,
+      gestureHandling: "greedy",
+      styles: RIDE_CONSOLE_MAP_STYLE
+    });
+  }
+
+  static updateDestinationMarker(destination) {
+    if (!map || !destination) return;
+
+    if (!destinationMarker) {
+      destinationMarker = new google.maps.Marker({
+        map,
+        title: "Destination"
+      });
+    }
+
+    destinationMarker.setPosition(destination);
+    destinationMarker.setTitle(destination.name);
+  }
+
+  static updateCurrentLocation(lat, lng, accuracy) {
+    if (!map) return;
+
+    const pos = { lat, lng };
+
+    if (!currentLocationMarker) {
+      currentLocationMarker = new google.maps.Marker({
+        position: pos,
+        map,
+        title: "Current Location",
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 7,
+          fillColor: "#ffffff",
+          fillOpacity: 1,
+          strokeColor: "#000000",
+          strokeWeight: 2
+        }
+      });
+
+      map.setCenter(pos);
+      map.setZoom(17);
+    } else {
+      currentLocationMarker.setPosition(pos);
+    }
+
+    if (!currentAccuracyCircle) {
+      currentAccuracyCircle = new google.maps.Circle({
+        map,
+        center: pos,
+        radius: accuracy,
+        strokeOpacity: 0.4,
+        strokeWeight: 1,
+        fillOpacity: 0.08
+      });
+    } else {
+      currentAccuracyCircle.setCenter(pos);
+      currentAccuracyCircle.setRadius(accuracy);
+    }
+  }
+
+  static drawRoute(routeItem) {
+    if (!routeItem?.route?.polyline?.encodedPolyline) {
+      console.warn("No route polyline:", routeItem);
+      return;
+    }
+
+    if (!google.maps.geometry?.encoding) {
+      console.error("Google Maps geometry library not loaded");
+      return;
+    }
+
+    MapManager.clearRoutePolyline();
+
+    const encoded = routeItem.route.polyline.encodedPolyline;
+    const path = google.maps.geometry.encoding.decodePath(encoded);
+
+    routePolyline = new google.maps.Polyline({
+      path,
+      map,
+      strokeColor: routeItem.type === "EXPRESS" ? "#4285f4" : "#ffb000",
+      strokeOpacity: 0.95,
+      strokeWeight: 6
+    });
+
+    MapManager.fitRouteBounds(path);
+  }
+
+  static clearRoutePolyline() {
+    if (routePolyline) {
+      routePolyline.setMap(null);
+      routePolyline = null;
+    }
+  }
+
+  static fitRouteBounds(path) {
+    if (!map || !path?.length) return;
+
+    const bounds = new google.maps.LatLngBounds();
+
+    path.forEach(point => bounds.extend(point));
+
+    if (appState.currentLocation) {
+      bounds.extend(appState.currentLocation);
+    }
+
+    if (appState.destination) {
+      bounds.extend(appState.destination);
+    }
+
+    map.fitBounds(bounds);
+  }
+
+  static centerOnDestination(destination) {
+    if (!map || !destination) return;
+
+    map.setCenter(destination);
+    map.setZoom(16);
+  }
 }
 
 // ==============================
@@ -608,10 +688,7 @@ class RouteManager {
   }
 
   static clearRoute() {
-    if (routePolyline) {
-      routePolyline.setMap(null);
-      routePolyline = null;
-    }
+    MapManager.clearRoutePolyline();
 
     appState.routeResults = [];
     appState.selectedRouteIndex = 0;
@@ -666,47 +743,10 @@ class RouteManager {
     });
   }
 
-  static drawSelectedRoute(index) {
-    const item = appState.routeResults[index];
-
-    if (!item?.route?.polyline?.encodedPolyline) {
-      console.warn("No route polyline:", item);
-      return;
-    }
-
-    if (!google.maps.geometry?.encoding) {
-      console.error("Google Maps geometry library not loaded");
-      return;
-    }
-
-    if (routePolyline) {
-      routePolyline.setMap(null);
-    }
-
-    const encoded = item.route.polyline.encodedPolyline;
-    const path = google.maps.geometry.encoding.decodePath(encoded);
-
-    routePolyline = new google.maps.Polyline({
-      path,
-      map,
-      strokeColor: item.type === "EXPRESS" ? "#4285f4" : "#ffb000",
-      strokeOpacity: 0.95,
-      strokeWeight: 6
-    });
-
-    const bounds = new google.maps.LatLngBounds();
-    path.forEach(point => bounds.extend(point));
-
-    if (appState.currentLocation) {
-      bounds.extend(appState.currentLocation);
-    }
-
-    if (appState.destination) {
-      bounds.extend(appState.destination);
-    }
-
-    map.fitBounds(bounds);
-  }
+static drawSelectedRoute(index) {
+  const item = appState.routeResults[index];
+  MapManager.drawRoute(item);
+}
 
   static getSelectedRouteItem() {
     return appState.routeResults[appState.selectedRouteIndex] || null;
@@ -1558,12 +1598,8 @@ class HistoryManager {
       input.value = item.name;
     }
 
-    updateDestinationMarker(appState.destination);
-
-    if (map) {
-      map.setCenter(appState.destination);
-      map.setZoom(16);
-    }
+    MapManager.updateDestinationMarker(appState.destination);
+    MapManager.centerOnDestination(appState.destination);
 
     showScreen("map");
     await RouteManager.calculateRoutes();
