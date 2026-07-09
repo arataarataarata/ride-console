@@ -95,7 +95,12 @@ let map = null;
 // ==============================
 // 02. State
 // ==============================
-
+let map = null;
+let autocomplete = null;
+let destinationMarker = null;
+let currentLocationMarker = null;
+let currentAccuracyCircle = null;
+let routePolyline = null;
 
 const appState = {
   screen: "home",
