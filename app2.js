@@ -96,14 +96,6 @@ let map = null;
 // 02. State
 // ==============================
 
-appState.map = {
-    googleMap:null,
-    autocomplete:null,
-    destinationMarker:null,
-    currentLocationMarker:null,
-    accuracyCircle:null,
-    routePolyline:null
-}
 
 const appState = {
   screen: "home",
