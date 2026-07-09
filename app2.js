@@ -167,40 +167,163 @@ function initMap() {
 }
 
 // ==============================
-// 04. UI
+// 04. UI Manager
 // ==============================
-function showScreen(name) {
-  document.querySelectorAll(".screen").forEach(screen => {
-    screen.classList.remove("active");
-  });
+class UIManager {
+  static showScreen(name) {
+    document.querySelectorAll(".screen").forEach(screen => {
+      screen.classList.remove("active");
+    });
 
-  const target = document.getElementById(`screen-${name}`);
-  if (target) {
-    target.classList.add("active");
+    const target = document.getElementById(`screen-${name}`);
+    if (target) {
+      target.classList.add("active");
+    }
+
+    appState.screen = name;
+
+    if (name === "dev") {
+      updateDevScreen();
+    }
   }
 
-  appState.screen = name;
+  static setText(id, text) {
+    const element = document.getElementById(id);
+    if (element) {
+      element.textContent = text;
+    }
+  }
 
-  if (name === "dev") {
-    updateDevScreen();
+  static selectRouteOption(selectedButton) {
+    document.querySelectorAll(".route-option").forEach(button => {
+      button.classList.remove("selected");
+    });
+
+    selectedButton.classList.add("selected");
+  }
+
+  static updateDestinationMarker(destination) {
+    if (!map || !destination) return;
+
+    if (!destinationMarker) {
+      destinationMarker = new google.maps.Marker({
+        map,
+        title: "Destination"
+      });
+    }
+
+    destinationMarker.setPosition(destination);
+    destinationMarker.setTitle(destination.name);
+  }
+
+  static updateCurrentLocationOnMap(lat, lng, accuracy) {
+    if (!map) return;
+
+    const pos = { lat, lng };
+
+    if (!currentLocationMarker) {
+      currentLocationMarker = new google.maps.Marker({
+        position: pos,
+        map,
+        title: "Current Location",
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 7,
+          fillColor: "#ffffff",
+          fillOpacity: 1,
+          strokeColor: "#000000",
+          strokeWeight: 2
+        }
+      });
+
+      map.setCenter(pos);
+      map.setZoom(17);
+    } else {
+      currentLocationMarker.setPosition(pos);
+    }
+
+    if (!currentAccuracyCircle) {
+      currentAccuracyCircle = new google.maps.Circle({
+        map,
+        center: pos,
+        radius: accuracy,
+        strokeOpacity: 0.4,
+        strokeWeight: 1,
+        fillOpacity: 0.08
+      });
+    } else {
+      currentAccuracyCircle.setCenter(pos);
+      currentAccuracyCircle.setRadius(accuracy);
+    }
+  }
+
+  static updateNavigationHeader({
+    distanceText,
+    instructionText,
+    roadText,
+    nextText,
+    totalDistanceText,
+    etaText
+  }) {
+    if (distanceText != null) UIManager.setText("naviDistance", distanceText);
+    if (instructionText != null) UIManager.setText("naviInstruction", instructionText);
+    if (roadText != null) UIManager.setText("naviRoad", roadText);
+    if (nextText != null) UIManager.setText("naviNext", nextText);
+    if (totalDistanceText != null) UIManager.setText("naviTotalDistance", totalDistanceText);
+    if (etaText != null) UIManager.setText("naviEta", etaText);
+  }
+
+  static updateSearchDebug() {
+    const debugMap = document.getElementById("debugMapStatus");
+    const debugRoute = document.getElementById("debugRouteStatus");
+
+    if (debugMap) {
+      debugMap.textContent = "MAP: PLACE SELECTED";
+    }
+
+    if (debugRoute && appState.destination) {
+      debugRoute.textContent = `DEST: ${appState.destination.name}`;
+    }
+  }
+
+  static updateNaviDebug(selected) {
+    const debugPanels = document.querySelectorAll("#screen-navi .debug-panel div");
+
+    if (!debugPanels || debugPanels.length < 3) return;
+
+    debugPanels[1].textContent = `ROUTE: ${selected.type}`;
+    debugPanels[2].textContent = "SEND: READY";
   }
 }
 
-function selectRouteOption(selectedButton) {
-  document.querySelectorAll(".route-option").forEach(button => {
-    button.classList.remove("selected");
-  });
-
-  selectedButton.classList.add("selected");
+// 既存コード互換ラッパー
+function showScreen(name) {
+  return UIManager.showScreen(name);
 }
 
 function setText(id, text) {
-  const element = document.getElementById(id);
-  if (element) {
-    element.textContent = text;
-  }
+  return UIManager.setText(id, text);
 }
 
+function selectRouteOption(selectedButton) {
+  return UIManager.selectRouteOption(selectedButton);
+}
+
+function updateDestinationMarker(destination) {
+  return UIManager.updateDestinationMarker(destination);
+}
+
+function updateCurrentLocationOnMap(lat, lng, accuracy) {
+  return UIManager.updateCurrentLocationOnMap(lat, lng, accuracy);
+}
+
+function updateSearchDebug() {
+  return UIManager.updateSearchDebug();
+}
+
+function updateNaviDebug(selected) {
+  return UIManager.updateNaviDebug(selected);
+}
 // ==============================
 // 05. GPS
 // ==============================
