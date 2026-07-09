@@ -104,8 +104,15 @@ let routePolyline = null;
 
 const appState = {
   screen: "home",
-  const appState = {
 
+  map: {
+    googleMap: null,
+    autocomplete: null,
+    destinationMarker: null,
+    currentLocationMarker: null,
+    accuracyCircle: null,
+    routePolyline: null
+  },
 
   destination: null,
   routeResults: [],
