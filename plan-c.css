@@ -310,3 +310,72 @@ button{
   color:#ff8aa0;
   border-color:rgba(255,92,122,.45);
 }
+
+.favorite-list,
+.history-list{
+  display:none;
+  margin:-2px 0 14px;
+}
+
+.favorite-list.open,
+.history-list.open{
+  display:block;
+}
+
+.history-item,
+.favorite-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:56px;
+  margin-bottom:8px;
+  padding:10px 12px;
+  background:rgba(16,23,34,.72);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:0 10px 22px rgba(0,0,0,.26);
+  backdrop-filter:blur(10px);
+}
+
+.history-main,
+.favorite-main{
+  flex:1;
+  min-width:0;
+}
+
+.history-title,
+.favorite-title{
+  color:var(--text);
+  font-size:14px;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.history-sub,
+.favorite-sub,
+.history-empty{
+  color:var(--sub);
+  font-size:11px;
+}
+
+.history-empty{
+  padding:12px 14px;
+  background:rgba(16,23,34,.55);
+  border:1px dashed var(--line);
+  border-radius:16px;
+}
+
+.history-delete,
+.history-favorite,
+.history-home{
+  width:36px;
+  height:36px;
+  border-radius:14px;
+  background:rgba(77,163,255,.10);
+  border:1px solid var(--line);
+  color:var(--accent2);
+  font-size:16px;
+  font-weight:800;
+}
