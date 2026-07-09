@@ -91,7 +91,7 @@ const RIDE_CONSOLE_MAP_STYLE = [
   { featureType: "transit", stylers: [{ visibility: "off" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#0f1a22" }] }
 ];
-
+let map = null;
 // ==============================
 // 02. State
 // ==============================
@@ -151,7 +151,16 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 function initMap() {
-  MapManager.createMap("map", DEFAULT_POSITION);
+  appState.map.googleMap = new google.maps.Map(document.getElementById("map"), {
+    center: DEFAULT_POSITION,
+    zoom: 14,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+    zoomControl: false,
+    gestureHandling: "greedy",
+    styles: RIDE_CONSOLE_MAP_STYLE
+  });
 
   setupAutocomplete();
   startLocationWatch();
