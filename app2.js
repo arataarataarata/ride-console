@@ -903,127 +903,153 @@ function getRemainingDistanceToStepEnd(currentLocation, step) {
 }
 
 // ==============================
-// 10. Reroute
+// 10. Reroute Manager
 // ==============================
-function checkRouteDeviation() {
-  if (!appState.route || !appState.currentLocation) {
-    return;
-  }
-
-  if (!appState.route.polyline?.encodedPolyline) {
-    return;
-  }
-
-  const path = google.maps.geometry.encoding.decodePath(
-    appState.route.polyline.encodedPolyline
-  );
-
-  if (!path || path.length < 2) {
-    return;
-  }
-
-  let minDistance = Infinity;
-
-  path.forEach(point => {
-    const p = latLngToPlain(point);
-    const d = getDistanceMeters(appState.currentLocation, p);
-
-    if (d < minDistance) {
-      minDistance = d;
-    }
-  });
-
-  appState.routeDeviationMeters = Math.round(minDistance);
-
-  const accuracy = appState.latestAccuracy || 0;
-  const threshold = accuracy + ROUTE_DEVIATION_EXTRA_METERS;
-  const isOffRoute = minDistance > threshold;
-
-  if (isOffRoute) {
-    appState.offRouteCount += 1;
-  } else {
-    appState.offRouteCount = 0;
-  }
-
-  console.table([
-    {
-      deviation: Math.round(minDistance),
-      accuracy: Math.round(accuracy),
-      threshold: Math.round(threshold),
-      offRoute: isOffRoute,
-      offRouteCount: appState.offRouteCount
-    }
-  ]);
-
-  if (appState.offRouteCount >= ROUTE_DEVIATION_COUNT_LIMIT) {
-    recalculateRoute();
-  }
-}
-
-async function recalculateRoute() {
-  if (appState.rerouting) {
-    console.log("Reroute already in progress");
-    return;
-  }
-
-  if (!appState.currentLocation || !appState.destination) {
-    console.warn("Cannot reroute: currentLocation or destination missing");
-    return;
-  }
-
-  const currentSelected = RouteManager.getSelectedRouteItem();
-
-  if (!currentSelected) {
-    console.warn("Cannot reroute: selected route missing");
-    return;
-  }
-
-  appState.rerouting = true;
-
-  try {
-    console.warn("REROUTE START");
-    setText("naviNext", "REROUTING");
-
-    if (window.BLE?.isEnabled?.() && window.BLE?.isConnected?.()) {
-      BLE.sendText("REROUTE");
-    }
-
-    const useExpress = currentSelected.type === "EXPRESS";
-
-    const newRoute = await fetchRoute({
-      originLat: appState.currentLocation.lat,
-      originLng: appState.currentLocation.lng,
-      destLat: appState.destination.lat,
-      destLng: appState.destination.lng,
-      avoidHighways: !useExpress,
-      avoidTolls: !useExpress
-    });
-
-    if (!newRoute) {
-      console.warn("REROUTE FAILED");
-      setText("naviNext", "REROUTE FAILED");
+class RerouteManager {
+  static checkDeviation() {
+    if (!appState.route || !appState.currentLocation) {
       return;
     }
 
+    if (!appState.route.polyline?.encodedPolyline) {
+      return;
+    }
+
+    const path = google.maps.geometry.encoding.decodePath(
+      appState.route.polyline.encodedPolyline
+    );
+
+    if (!path || path.length < 2) {
+      return;
+    }
+
+    const minDistance = RerouteManager.getMinimumDistanceFromRoute(
+      appState.currentLocation,
+      path
+    );
+
+    appState.routeDeviationMeters = Math.round(minDistance);
+
+    const accuracy = appState.latestAccuracy || 0;
+    const threshold = accuracy + ROUTE_DEVIATION_EXTRA_METERS;
+    const isOffRoute = minDistance > threshold;
+
+    appState.offRouteCount = isOffRoute
+      ? appState.offRouteCount + 1
+      : 0;
+
+    console.table([
+      {
+        deviation: Math.round(minDistance),
+        accuracy: Math.round(accuracy),
+        threshold: Math.round(threshold),
+        offRoute: isOffRoute,
+        offRouteCount: appState.offRouteCount
+      }
+    ]);
+
+    if (appState.offRouteCount >= ROUTE_DEVIATION_COUNT_LIMIT) {
+      RerouteManager.recalculate();
+    }
+  }
+
+  static getMinimumDistanceFromRoute(currentLocation, path) {
+    let minDistance = Infinity;
+
+    path.forEach(point => {
+      const p = latLngToPlain(point);
+      const d = getDistanceMeters(currentLocation, p);
+
+      if (d < minDistance) {
+        minDistance = d;
+      }
+    });
+
+    return minDistance;
+  }
+
+  static async recalculate() {
+    if (appState.rerouting) {
+      console.log("Reroute already in progress");
+      return;
+    }
+
+    if (!appState.currentLocation || !appState.destination) {
+      console.warn("Cannot reroute: currentLocation or destination missing");
+      return;
+    }
+
+    const currentSelected = RouteManager.getSelectedRouteItem();
+
+    if (!currentSelected) {
+      console.warn("Cannot reroute: selected route missing");
+      return;
+    }
+
+    appState.rerouting = true;
+
+    try {
+      console.warn("REROUTE START");
+      setText("naviNext", "REROUTING");
+
+      RerouteManager.sendRerouteNoticeToBle();
+
+      const useExpress = currentSelected.type === "EXPRESS";
+
+      const newRoute = await RouteManager.fetchRoute({
+        originLat: appState.currentLocation.lat,
+        originLng: appState.currentLocation.lng,
+        destLat: appState.destination.lat,
+        destLng: appState.destination.lng,
+        avoidHighways: !useExpress,
+        avoidTolls: !useExpress
+      });
+
+      if (!newRoute) {
+        console.warn("REROUTE FAILED");
+        setText("naviNext", "REROUTE FAILED");
+        return;
+      }
+
+      RerouteManager.applyNewRoute(newRoute);
+
+      console.warn("REROUTE DONE");
+      setText("naviNext", "REROUTE DONE");
+
+    } finally {
+      appState.rerouting = false;
+    }
+  }
+
+  static sendRerouteNoticeToBle() {
+    if (window.BLE?.isEnabled?.() && window.BLE?.isConnected?.()) {
+      BLE.sendText("REROUTE");
+    }
+  }
+
+  static applyNewRoute(newRoute) {
     appState.routeResults[appState.selectedRouteIndex].route = newRoute;
     appState.route = newRoute;
-    appState.routePoints = decodeRoutePoints(newRoute);
+    appState.routePoints = MiniMap.decodeRoutePoints(newRoute);
 
     appState.currentStepIndex = 0;
     appState.currentStepRemainMeters = null;
     appState.offRouteCount = 0;
 
-    drawSelectedRoute(appState.selectedRouteIndex);
-    updateCurrentStep();
-    updateNaviStepDisplay();
-    drawMiniMap(appState.currentLocation, appState.routePoints);
-
-    console.warn("REROUTE DONE");
-    setText("naviNext", "REROUTE DONE");
-
-  } finally {
-    appState.rerouting = false;
+    RouteManager.drawSelectedRoute(appState.selectedRouteIndex);
+    NavigationManager.updateCurrentStep();
+    NavigationManager.updateStepDisplay();
+    MiniMap.draw(appState.currentLocation, appState.routePoints);
   }
+}
+
+// 既存コード互換ラッパー
+function checkRouteDeviation() {
+  return RerouteManager.checkDeviation();
+}
+
+function recalculateRoute() {
+  return RerouteManager.recalculate();
 }
 
 // ==============================
