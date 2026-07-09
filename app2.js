@@ -350,251 +350,274 @@ function updateDestinationMarker(destination) {
 }
 
 // ==============================
-// 07. Routes API
+// 07. Route Manager
 // ==============================
-async function calculateRoutes() {
-  if (!appState.destination) {
-    alert("Please select destination.");
-    return;
-  }
-
-  clearRoute();
-
-  const origin = getCurrentOrigin();
-
-  const localRoute = await fetchRoute({
-    originLat: origin.lat,
-    originLng: origin.lng,
-    destLat: appState.destination.lat,
-    destLng: appState.destination.lng,
-    avoidHighways: true,
-    avoidTolls: true
-  });
-
-  const expressRoute = await fetchRoute({
-    originLat: origin.lat,
-    originLng: origin.lng,
-    destLat: appState.destination.lat,
-    destLng: appState.destination.lng,
-    avoidHighways: false,
-    avoidTolls: false
-  });
-
-  appState.routeResults = [
-    {
-      type: "LOCAL",
-      badge: "NO TOLL",
-      route: localRoute,
-      toll: "Free"
-    },
-    {
-      type: "EXPRESS",
-      badge: "FAST",
-      route: expressRoute,
-      toll: "Toll"
+class RouteManager {
+  static async calculateRoutes() {
+    if (!appState.destination) {
+      alert("Please select destination.");
+      return;
     }
-  ].filter(item => item.route);
 
-  if (appState.routeResults.length === 0) {
-    alert("No route found.");
-    return;
-  }
+    RouteManager.clearRoute();
 
-  appState.selectedRouteIndex = 0;
+    const origin = getCurrentOrigin();
 
-  renderRouteCards();
-  drawSelectedRoute(0);
-}
-
-async function fetchRoute({
-  originLat,
-  originLng,
-  destLat,
-  destLng,
-  avoidHighways,
-  avoidTolls
-}) {
-  const url = "https://routes.googleapis.com/directions/v2:computeRoutes";
-
-  const body = {
-    origin: {
-      location: {
-        latLng: {
-          latitude: originLat,
-          longitude: originLng
-        }
-      }
-    },
-    destination: {
-      location: {
-        latLng: {
-          latitude: destLat,
-          longitude: destLng
-        }
-      }
-    },
-    travelMode: "DRIVE",
-    routingPreference: "TRAFFIC_AWARE",
-    computeAlternativeRoutes: false,
-    routeModifiers: {
-      avoidHighways,
-      avoidTolls
-    },
-    languageCode: "ja-JP",
-    units: "METRIC"
-  };
-
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": GOOGLE_ROUTES_API_KEY,
-        "X-Goog-FieldMask": [
-          "routes.distanceMeters",
-          "routes.duration",
-          "routes.polyline.encodedPolyline",
-          "routes.travelAdvisory.tollInfo",
-          "routes.legs.steps.distanceMeters",
-          "routes.legs.steps.staticDuration",
-          "routes.legs.steps.polyline.encodedPolyline",
-          "routes.legs.steps.navigationInstruction"
-        ].join(",")
-      },
-      body: JSON.stringify(body)
+    const localRoute = await RouteManager.fetchRoute({
+      originLat: origin.lat,
+      originLng: origin.lng,
+      destLat: appState.destination.lat,
+      destLng: appState.destination.lng,
+      avoidHighways: true,
+      avoidTolls: true
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Routes API error:", errorText);
-      return null;
+    const expressRoute = await RouteManager.fetchRoute({
+      originLat: origin.lat,
+      originLng: origin.lng,
+      destLat: appState.destination.lat,
+      destLng: appState.destination.lng,
+      avoidHighways: false,
+      avoidTolls: false
+    });
+
+    appState.routeResults = [
+      { type: "LOCAL", badge: "NO TOLL", route: localRoute, toll: "Free" },
+      { type: "EXPRESS", badge: "FAST", route: expressRoute, toll: "Toll" }
+    ].filter(item => item.route);
+
+    if (appState.routeResults.length === 0) {
+      alert("No route found.");
+      return;
     }
 
-    const data = await response.json();
-    console.log("Routes API response:", data);
+    appState.selectedRouteIndex = 0;
 
-    if (!data.routes || data.routes.length === 0) {
-      return null;
-    }
-
-    return data.routes[0];
-
-  } catch (error) {
-    console.error("fetchRoute failed:", error);
-    return null;
+    RouteManager.renderRouteCards();
+    RouteManager.drawSelectedRoute(0);
   }
+
+  static async fetchRoute({
+    originLat,
+    originLng,
+    destLat,
+    destLng,
+    avoidHighways,
+    avoidTolls
+  }) {
+    const url = "https://routes.googleapis.com/directions/v2:computeRoutes";
+
+    const body = {
+      origin: {
+        location: {
+          latLng: {
+            latitude: originLat,
+            longitude: originLng
+          }
+        }
+      },
+      destination: {
+        location: {
+          latLng: {
+            latitude: destLat,
+            longitude: destLng
+          }
+        }
+      },
+      travelMode: "DRIVE",
+      routingPreference: "TRAFFIC_AWARE",
+      computeAlternativeRoutes: false,
+      routeModifiers: {
+        avoidHighways,
+        avoidTolls
+      },
+      languageCode: "ja-JP",
+      units: "METRIC"
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": GOOGLE_ROUTES_API_KEY,
+          "X-Goog-FieldMask": [
+            "routes.distanceMeters",
+            "routes.duration",
+            "routes.polyline.encodedPolyline",
+            "routes.travelAdvisory.tollInfo",
+            "routes.legs.steps.distanceMeters",
+            "routes.legs.steps.staticDuration",
+            "routes.legs.steps.polyline.encodedPolyline",
+            "routes.legs.steps.navigationInstruction"
+          ].join(",")
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Routes API error:", errorText);
+        return null;
+      }
+
+      const data = await response.json();
+      console.log("Routes API response:", data);
+
+      if (!data.routes || data.routes.length === 0) {
+        return null;
+      }
+
+      return data.routes[0];
+
+    } catch (error) {
+      console.error("fetchRoute failed:", error);
+      return null;
+    }
+  }
+
+  static getSteps(route) {
+    if (!route?.legs?.[0]?.steps) {
+      return [];
+    }
+
+    return route.legs[0].steps;
+  }
+
+  static clearRoute() {
+    if (routePolyline) {
+      routePolyline.setMap(null);
+      routePolyline = null;
+    }
+
+    appState.routeResults = [];
+    appState.selectedRouteIndex = 0;
+    appState.route = null;
+    appState.routePoints = [];
+    appState.currentStepIndex = 0;
+    appState.currentStepRemainMeters = null;
+    appState.routeDeviationMeters = null;
+    appState.offRouteCount = 0;
+  }
+
+  static renderRouteCards() {
+    const container = document.getElementById("routeOptions");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    appState.routeResults.forEach((item, index) => {
+      const minutes = formatDuration(item.route.duration);
+      const distance = formatDistance(item.route.distanceMeters);
+
+      const button = document.createElement("button");
+      button.className =
+        "route-option" + (index === appState.selectedRouteIndex ? " selected" : "");
+
+      button.onclick = () => {
+        appState.selectedRouteIndex = index;
+        RouteManager.drawSelectedRoute(index);
+
+        document.querySelectorAll(".route-option").forEach(btn => {
+          btn.classList.remove("selected");
+        });
+
+        button.classList.add("selected");
+      };
+
+      button.innerHTML = `
+        <div class="route-option-top">
+          <div class="route-name">${item.type}</div>
+          <div class="route-badge ${item.type === "EXPRESS" ? "express" : ""}">
+            ${item.badge}
+          </div>
+        </div>
+        <div class="route-main">${minutes}</div>
+        <div class="route-meta">
+          <span>${distance}</span>
+          <span>${item.toll}</span>
+        </div>
+      `;
+
+      container.appendChild(button);
+    });
+  }
+
+  static drawSelectedRoute(index) {
+    const item = appState.routeResults[index];
+
+    if (!item?.route?.polyline?.encodedPolyline) {
+      console.warn("No route polyline:", item);
+      return;
+    }
+
+    if (!google.maps.geometry?.encoding) {
+      console.error("Google Maps geometry library not loaded");
+      return;
+    }
+
+    if (routePolyline) {
+      routePolyline.setMap(null);
+    }
+
+    const encoded = item.route.polyline.encodedPolyline;
+    const path = google.maps.geometry.encoding.decodePath(encoded);
+
+    routePolyline = new google.maps.Polyline({
+      path,
+      map,
+      strokeColor: item.type === "EXPRESS" ? "#4285f4" : "#ffb000",
+      strokeOpacity: 0.95,
+      strokeWeight: 6
+    });
+
+    const bounds = new google.maps.LatLngBounds();
+    path.forEach(point => bounds.extend(point));
+
+    if (appState.currentLocation) {
+      bounds.extend(appState.currentLocation);
+    }
+
+    if (appState.destination) {
+      bounds.extend(appState.destination);
+    }
+
+    map.fitBounds(bounds);
+  }
+
+  static getSelectedRouteItem() {
+    return appState.routeResults[appState.selectedRouteIndex] || null;
+  }
+
+  static isExpressSelected() {
+    const selected = RouteManager.getSelectedRouteItem();
+    return selected?.type === "EXPRESS";
+  }
+}
+
+// 既存コード互換ラッパー
+function calculateRoutes() {
+  return RouteManager.calculateRoutes();
+}
+
+function fetchRoute(params) {
+  return RouteManager.fetchRoute(params);
 }
 
 function getRouteSteps(route) {
-  if (!route?.legs?.[0]?.steps) {
-    return [];
-  }
-
-  return route.legs[0].steps;
+  return RouteManager.getSteps(route);
 }
 
-// ==============================
-// 08. Route Drawing
-// ==============================
 function clearRoute() {
-  if (routePolyline) {
-    routePolyline.setMap(null);
-    routePolyline = null;
-  }
-
-  appState.routeResults = [];
-  appState.selectedRouteIndex = 0;
-  appState.route = null;
-  appState.routePoints = [];
-  appState.currentStepIndex = 0;
-  appState.currentStepRemainMeters = null;
-  appState.routeDeviationMeters = null;
-  appState.offRouteCount = 0;
+  return RouteManager.clearRoute();
 }
 
 function renderRouteCards() {
-  const container = document.getElementById("routeOptions");
-  if (!container) return;
-
-  container.innerHTML = "";
-
-  appState.routeResults.forEach((item, index) => {
-    const minutes = formatDuration(item.route.duration);
-    const distance = formatDistance(item.route.distanceMeters);
-
-    const button = document.createElement("button");
-    button.className =
-      "route-option" + (index === appState.selectedRouteIndex ? " selected" : "");
-
-    button.onclick = () => {
-      appState.selectedRouteIndex = index;
-      drawSelectedRoute(index);
-
-      document.querySelectorAll(".route-option").forEach(btn => {
-        btn.classList.remove("selected");
-      });
-
-      button.classList.add("selected");
-    };
-
-    button.innerHTML = `
-      <div class="route-option-top">
-        <div class="route-name">${item.type}</div>
-        <div class="route-badge ${item.type === "EXPRESS" ? "express" : ""}">
-          ${item.badge}
-        </div>
-      </div>
-      <div class="route-main">${minutes}</div>
-      <div class="route-meta">
-        <span>${distance}</span>
-        <span>${item.toll}</span>
-      </div>
-    `;
-
-    container.appendChild(button);
-  });
+  return RouteManager.renderRouteCards();
 }
 
 function drawSelectedRoute(index) {
-  const item = appState.routeResults[index];
-
-  if (!item?.route?.polyline?.encodedPolyline) {
-    console.warn("No route polyline:", item);
-    return;
-  }
-
-  if (!google.maps.geometry?.encoding) {
-    console.error("Google Maps geometry library not loaded");
-    return;
-  }
-
-  if (routePolyline) {
-    routePolyline.setMap(null);
-  }
-
-  const encoded = item.route.polyline.encodedPolyline;
-  const path = google.maps.geometry.encoding.decodePath(encoded);
-
-  routePolyline = new google.maps.Polyline({
-    path,
-    map,
-    strokeColor: item.type === "EXPRESS" ? "#4285f4" : "#ffb000",
-    strokeOpacity: 0.95,
-    strokeWeight: 6
-  });
-
-  const bounds = new google.maps.LatLngBounds();
-  path.forEach(point => bounds.extend(point));
-
-  if (appState.currentLocation) {
-    bounds.extend(appState.currentLocation);
-  }
-
-  if (appState.destination) {
-    bounds.extend(appState.destination);
-  }
-
-  map.fitBounds(bounds);
+  return RouteManager.drawSelectedRoute(index);
 }
 
 // ==============================
@@ -899,7 +922,7 @@ async function recalculateRoute() {
     return;
   }
 
-  const currentSelected = appState.routeResults[appState.selectedRouteIndex];
+  const currentSelected = RouteManager.getSelectedRouteItem();
 
   if (!currentSelected) {
     console.warn("Cannot reroute: selected route missing");
