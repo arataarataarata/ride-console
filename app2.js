@@ -131,6 +131,16 @@ const appState = {
   rerouting: false,
   navigationStarted: false
 };
+appState.navDebug = {
+  stepIndex: null,
+  nearestIndex: null,
+  pointCount: null,
+  remainMeters: null,
+  routeRemain: null,
+  directRemain: null,
+  distanceToPathStart: null,
+  distanceToPathEnd: null
+};
 
 // 旧コード互換用。内部的には appState を正とする。
 Object.defineProperty(window, "selectedDestination", {
@@ -1003,13 +1013,31 @@ static updateStepDisplay() {
     const directRemain = getDistanceMeters(currentLocation, nearestPoint);
     const remainMeters = routeRemain + directRemain;
 
+    const startPoint = latLngToPlain(path[0]);
+    const endPoint = latLngToPlain(path[path.length - 1]);
+
+    const distanceToPathStart = getDistanceMeters(currentLocation, startPoint);
+    const distanceToPathEnd = getDistanceMeters(currentLocation, endPoint);
+
+    appState.navDebug = {
+      stepIndex: appState.currentStepIndex,
+      nearestIndex,
+      pointCount: path.length,
+      remainMeters: Math.round(remainMeters),
+      routeRemain: Math.round(routeRemain),
+      directRemain: Math.round(directRemain),
+      distanceToPathStart: Math.round(distanceToPathStart),
+      distanceToPathEnd: Math.round(distanceToPathEnd)
+    };
     return {
       remainMeters: Math.round(remainMeters),
       routeRemain: Math.round(routeRemain),
       directRemain: Math.round(directRemain),
       nearestDistance: Math.round(nearestDistance),
       nearestIndex,
-      pointCount: path.length
+      pointCount: path.length,
+      distanceToPathStart: Math.round(distanceToPathStart),
+      distanceToPathEnd: Math.round(distanceToPathEnd)
     };
   }
 
@@ -1900,6 +1928,17 @@ function updateDeveloperPanel() {
   const steps = appState.route ? getRouteSteps(appState.route) : [];
   const currentStep = steps[appState.currentStepIndex] || null;
   const nextStep = steps[appState.currentStepIndex + 1] || null;
+
+  const navDebug = appState.navDebug || {};
+
+  setText("debugNavStepIndex", navDebug.stepIndex ?? "-");
+  setText("debugNearestIndex", navDebug.nearestIndex ?? "-");
+  setText("debugPointCount", navDebug.pointCount ?? "-");
+  setText("debugRemainMeters", navDebug.remainMeters ?? "-");
+  setText("debugRouteRemain", navDebug.routeRemain ?? "-");
+  setText("debugDirectRemain", navDebug.directRemain ?? "-");
+  setText("debugPathStart", navDebug.distanceToPathStart ?? "-");
+  setText("debugPathEnd", navDebug.distanceToPathEnd ?? "-");
 
   setText(
     "devLine1",
