@@ -91,7 +91,7 @@ const RIDE_CONSOLE_MAP_STYLE = [
   { featureType: "transit", stylers: [{ visibility: "off" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#0f1a22" }] }
 ];
-let map = null;
+
 // ==============================
 // 02. State
 // ==============================
