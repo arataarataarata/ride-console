@@ -1066,6 +1066,14 @@ function getRemainingDistanceToStepEnd(currentLocation, step) {
   return NavigationManager.getRemainingDistanceToStepEnd(currentLocation, step);
 }
 
+function selectHistoryDestination(name) {
+  showScreen("map");
+
+  const input = document.getElementById("destinationInput");
+  if (input) {
+    input.value = name;
+  }
+}
 // ==============================
 // 10. Reroute Manager
 // ==============================
@@ -1575,22 +1583,20 @@ class HistoryManager {
     el.textContent = lastRoute ? lastRoute.name : "なし";
   }
 
+
   static async startItem(index) {
-    const history = HistoryManager.getAll();
-    const item = history[index];
+  const history = HistoryManager.getAll();
+  const item = history[index];
 
-    if (!item) return;
+  if (!item) return;
 
-    if (!item.lat || !item.lng) {
-      console.warn("History item has no coordinates:", item);
-      showScreen("map");
-      return;
-    }
+  if (!item.lat || !item.lng) {
+    console.warn("History item has no coordinates:", item);
 
     appState.destination = {
       name: item.name,
-      lat: item.lat,
-      lng: item.lng
+      lat: item.lat || null,
+      lng: item.lng || null
     };
 
     const input = document.getElementById("destinationInput");
@@ -1598,13 +1604,27 @@ class HistoryManager {
       input.value = item.name;
     }
 
-    MapManager.updateDestinationMarker(appState.destination);
-    MapManager.centerOnDestination(appState.destination);
-
     showScreen("map");
-    await RouteManager.calculateRoutes();
+    return;
   }
 
+  appState.destination = {
+    name: item.name,
+    lat: item.lat,
+    lng: item.lng
+  };
+
+  const input = document.getElementById("destinationInput");
+  if (input) {
+    input.value = item.name;
+  }
+
+  MapManager.updateDestinationMarker(appState.destination);
+  MapManager.centerOnDestination(appState.destination);
+
+  showScreen("map");
+  await RouteManager.calculateRoutes();
+}
   static async startLast() {
     const lastRoute = HistoryManager.getLast();
 
