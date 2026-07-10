@@ -129,8 +129,21 @@ const appState = {
   routeDeviationMeters: null,
   offRouteCount: 0,
   rerouting: false,
-  navigationStarted: false
+  navigationStarted: false,
+
+    // 逆走判定
+  lastRouteCheckLocation: null,
+  lastRouteProgressMeters: null,
+  lastRouteSegmentIndex: null,
+
+  wrongWayCount: 0,
+  wrongWayDistanceMeters: 0,
+  wrongWayAngle: null,
+  isWrongWay: false
+  
 };
+
+
 appState.navDebug = {
   stepIndex: null,
   nearestIndex: null,
@@ -843,16 +856,29 @@ class NavigationManager {
     });
   }
 
-  static initializeRoute(selected) {
-    appState.route = selected.route;
-    appState.routePoints = MiniMap.decodeRoutePoints(appState.route);
+static initializeRoute(selected) {
+  appState.route = selected.route;
+  appState.routePoints = MiniMap.decodeRoutePoints(appState.route);
 
-    appState.currentStepIndex = 0;
-    appState.currentStepRemainMeters = null;
-    appState.offRouteCount = 0;
-    appState.routeDeviationMeters = null;
-    appState.navigationStarted = true;
-  }
+  appState.currentStepIndex = 0;
+  appState.currentStepRemainMeters = null;
+
+  // 通常のルート逸脱判定
+  appState.offRouteCount = 0;
+  appState.routeDeviationMeters = null;
+
+  // 逆走判定
+  appState.lastRouteCheckLocation = null;
+  appState.lastRouteProgressMeters = null;
+  appState.lastRouteSegmentIndex = null;
+
+  appState.wrongWayCount = 0;
+  appState.wrongWayDistanceMeters = 0;
+  appState.wrongWayAngle = null;
+  appState.isWrongWay = false;
+
+  appState.navigationStarted = true;
+}
 
 static updateInitialDisplay(selected) {
   const duration = formatDuration(selected.route.duration);
@@ -1108,10 +1134,20 @@ static updateStepDisplay() {
   static checkFinished() {
     if (!appState.route) return;
 
+    const NAVIGATION_FINISH_THRESHOLD_METERS = 20;
     const steps = RouteManager.getSteps(appState.route);
     const index = appState.currentStepIndex || 0;
 
-    if (steps.length > 0 && index >= steps.length - 1) {
+    const isLastStep =
+      steps.length > 0 &&
+      index >= steps.length - 1;
+
+    const isNearDestination =
+      appState.currentStepRemainMeters != null &&
+      appState.currentStepRemainMeters <=
+        NAVIGATION_FINISH_THRESHOLD_METERS;
+
+    if (isLastStep && isNearDestination) {
       NavigationManager.finish();
     }
   }
@@ -1171,68 +1207,533 @@ function selectHistoryDestination(name) {
 // 10. Reroute Manager
 // ==============================
 class RerouteManager {
-  static checkDeviation() {
-    if (!appState.route || !appState.currentLocation) {
-      return;
-    }
 
-    if (!appState.route.polyline?.encodedPolyline) {
-      return;
-    }
+  // 前回位置から最低5m移動した場合だけ逆走判定
+  const WRONG_WAY_MIN_MOVEMENT_METERS = 5;
 
-    const path = google.maps.geometry.encoding.decodePath(
-      appState.route.polyline.encodedPolyline
-    );
+  // 実移動方向とルート方向の差が120度以上
+  const WRONG_WAY_ANGLE_THRESHOLD = 120;
 
-    if (!path || path.length < 2) {
-      return;
-    }
+  // 逆方向に累計25m進んだらリルート
+  const WRONG_WAY_DISTANCE_LIMIT_METERS = 25;
 
-    const minDistance = RerouteManager.getMinimumDistanceFromRoute(
+  // 逆走判定が3回連続したら確定
+  const WRONG_WAY_COUNT_LIMIT = 3;
+
+  // GPS精度がこれより悪い場合は逆走判定しない
+  const WRONG_WAY_MAX_ACCURACY_METERS = 30;
+
+  // 数m程度の進捗変動はGPS誤差として無視
+  const WRONG_WAY_PROGRESS_TOLERANCE_METERS = 2;
+  
+static checkDeviation() {
+  if (!appState.route || !appState.currentLocation) {
+    return;
+  }
+
+  if (!appState.route.polyline?.encodedPolyline) {
+    return;
+  }
+
+  const path = google.maps.geometry.encoding.decodePath(
+    appState.route.polyline.encodedPolyline
+  );
+
+  if (!path || path.length < 2) {
+    return;
+  }
+
+  /*
+   * 現在地をルート全体へ投影し、
+   * 最も近い投影点を取得
+   */
+  const projection =
+    RerouteManager.getNearestRouteProjection(
       appState.currentLocation,
       path
     );
 
-    appState.routeDeviationMeters = Math.round(minDistance);
+  if (!projection) {
+    return;
+  }
 
-    const accuracy = appState.latestAccuracy || 0;
-    const threshold = accuracy + ROUTE_DEVIATION_EXTRA_METERS;
-    const isOffRoute = minDistance > threshold;
+  // ==============================
+  // 通常のルート逸脱判定
+  // ==============================
 
-    appState.offRouteCount = isOffRoute
-      ? appState.offRouteCount + 1
-      : 0;
+  const minDistance = projection.distanceMeters;
 
-    console.table([
-      {
-        deviation: Math.round(minDistance),
-        accuracy: Math.round(accuracy),
-        threshold: Math.round(threshold),
-        offRoute: isOffRoute,
-        offRouteCount: appState.offRouteCount
-      }
-    ]);
+  appState.routeDeviationMeters =
+    Math.round(minDistance);
 
-    if (appState.offRouteCount >= ROUTE_DEVIATION_COUNT_LIMIT) {
-      RerouteManager.recalculate();
+  const accuracy =
+    appState.latestAccuracy || 0;
+
+  const threshold =
+    accuracy +
+    ROUTE_DEVIATION_EXTRA_METERS;
+
+  const isOffRoute =
+    minDistance > threshold;
+
+  appState.offRouteCount = isOffRoute
+    ? appState.offRouteCount + 1
+    : 0;
+
+  // ==============================
+  // 逆走判定
+  // ==============================
+
+  const wrongWayResult =
+    RerouteManager.checkWrongWay(
+      appState.currentLocation,
+      path,
+      projection
+    );
+
+  appState.isWrongWay =
+    wrongWayResult.isWrongWay;
+
+  appState.wrongWayAngle =
+    wrongWayResult.angleDifference;
+
+  // ==============================
+  // デバッグ表示
+  // ==============================
+
+  console.table([
+    {
+      deviation:
+        Math.round(minDistance),
+
+      accuracy:
+        Math.round(accuracy),
+
+      threshold:
+        Math.round(threshold),
+
+      offRoute:
+        isOffRoute,
+
+      offRouteCount:
+        appState.offRouteCount,
+
+      routeProgress:
+        Math.round(
+          projection.routeProgressMeters
+        ),
+
+      progressDelta:
+        wrongWayResult.progressDelta == null
+          ? null
+          : Math.round(
+              wrongWayResult.progressDelta
+            ),
+
+      movement:
+        wrongWayResult.movementDistance == null
+          ? null
+          : Math.round(
+              wrongWayResult.movementDistance
+            ),
+
+      wrongWayAngle:
+        wrongWayResult.angleDifference == null
+          ? null
+          : Math.round(
+              wrongWayResult.angleDifference
+            ),
+
+      wrongWay:
+        wrongWayResult.isWrongWay,
+
+      wrongWayCount:
+        appState.wrongWayCount,
+
+      wrongWayDistance:
+        Math.round(
+          appState.wrongWayDistanceMeters
+        )
     }
+  ]);
+
+  // ==============================
+  // リルート確定
+  // ==============================
+
+  const offRouteConfirmed =
+    appState.offRouteCount >=
+    ROUTE_DEVIATION_COUNT_LIMIT;
+
+  const wrongWayConfirmed =
+    appState.wrongWayCount >=
+      WRONG_WAY_COUNT_LIMIT &&
+    appState.wrongWayDistanceMeters >=
+      WRONG_WAY_DISTANCE_LIMIT_METERS;
+
+  if (
+    offRouteConfirmed ||
+    wrongWayConfirmed
+  ) {
+    console.warn(
+      offRouteConfirmed
+        ? "REROUTE: OFF ROUTE"
+        : "REROUTE: WRONG WAY"
+    );
+
+    RerouteManager.recalculate();
+  }
+}
+static getNearestRouteProjection(
+  currentLocation,
+  path
+) {
+  if (
+    !currentLocation ||
+    !path ||
+    path.length < 2
+  ) {
+    return null;
   }
 
-  static getMinimumDistanceFromRoute(currentLocation, path) {
-    let minDistance = Infinity;
+  let nearestDistance = Infinity;
+  let nearestPoint = null;
+  let nearestSegmentIndex = -1;
+  let nearestT = 0;
+  let routeProgressMeters = 0;
 
-    path.forEach(point => {
-      const p = latLngToPlain(point);
-      const d = getDistanceMeters(currentLocation, p);
+  /*
+   * ルート始点から現在線分始点までの
+   * 累積距離
+   */
+  let accumulatedDistance = 0;
 
-      if (d < minDistance) {
-        minDistance = d;
-      }
-    });
+  for (
+    let i = 0;
+    i < path.length - 1;
+    i++
+  ) {
+    const a =
+      latLngToPlain(path[i]);
 
-    return minDistance;
+    const b =
+      latLngToPlain(path[i + 1]);
+
+    /*
+     * Navigation Managerの
+     * 既存投影関数を再利用
+     */
+    const projection =
+      NavigationManager.projectPointToSegment(
+        currentLocation,
+        a,
+        b
+      );
+
+    const distanceToProjection =
+      getDistanceMeters(
+        currentLocation,
+        projection.point
+      );
+
+    const segmentLength =
+      google.maps.geometry.spherical
+        .computeDistanceBetween(
+          path[i],
+          path[i + 1]
+        );
+
+    if (
+      distanceToProjection <
+      nearestDistance
+    ) {
+      nearestDistance =
+        distanceToProjection;
+
+      nearestPoint =
+        projection.point;
+
+      nearestSegmentIndex = i;
+
+      nearestT =
+        projection.t;
+
+      /*
+       * ルート始点から投影点までの距離
+       */
+      routeProgressMeters =
+        accumulatedDistance +
+        segmentLength *
+          projection.t;
+    }
+
+    accumulatedDistance +=
+      segmentLength;
   }
 
+  if (
+    !nearestPoint ||
+    nearestSegmentIndex < 0
+  ) {
+    return null;
+  }
+
+  return {
+    distanceMeters:
+      nearestDistance,
+
+    projectedPoint:
+      nearestPoint,
+
+    segmentIndex:
+      nearestSegmentIndex,
+
+    segmentT:
+      nearestT,
+
+    routeProgressMeters
+  };
+}
+static checkWrongWay(
+  currentLocation,
+  path,
+  projection
+) {
+  const result = {
+    isWrongWay: false,
+    angleDifference: null,
+    progressDelta: null,
+    movementDistance: null
+  };
+
+  const previousLocation =
+    appState.lastRouteCheckLocation;
+
+  const previousProgress =
+    appState.lastRouteProgressMeters;
+
+  /*
+   * 初回は比較できないため、
+   * 現在値を保存して終了
+   */
+  if (
+    !previousLocation ||
+    previousProgress == null
+  ) {
+    RerouteManager.saveRouteCheckState(
+      currentLocation,
+      projection
+    );
+
+    return result;
+  }
+
+  const movementDistance =
+    getDistanceMeters(
+      previousLocation,
+      currentLocation
+    );
+
+  result.movementDistance =
+    movementDistance;
+
+  /*
+   * ほとんど動いていない場合は
+   * GPSの揺れとして判定しない
+   */
+  if (
+    movementDistance <
+    WRONG_WAY_MIN_MOVEMENT_METERS
+  ) {
+    return result;
+  }
+
+  const accuracy =
+    appState.latestAccuracy || 0;
+
+  /*
+   * GPS精度が悪いときは
+   * 判定を保留
+   */
+  if (
+    accuracy >
+    WRONG_WAY_MAX_ACCURACY_METERS
+  ) {
+    RerouteManager.saveRouteCheckState(
+      currentLocation,
+      projection
+    );
+
+    return result;
+  }
+
+  const segmentIndex =
+    projection.segmentIndex;
+
+  if (
+    segmentIndex < 0 ||
+    segmentIndex >=
+      path.length - 1
+  ) {
+    RerouteManager.saveRouteCheckState(
+      currentLocation,
+      projection
+    );
+
+    return result;
+  }
+
+  /*
+   * 前回GPS地点から今回GPS地点への
+   * 実移動方向
+   */
+  const movementBearing =
+    RerouteManager.getBearingDegrees(
+      previousLocation,
+      currentLocation
+    );
+
+  /*
+   * 現在地付近のルート線分方向
+   */
+  const routeStart =
+    latLngToPlain(
+      path[segmentIndex]
+    );
+
+  const routeEnd =
+    latLngToPlain(
+      path[segmentIndex + 1]
+    );
+
+  const routeBearing =
+    RerouteManager.getBearingDegrees(
+      routeStart,
+      routeEnd
+    );
+
+  const angleDifference =
+    RerouteManager.getAngleDifference(
+      movementBearing,
+      routeBearing
+    );
+
+  /*
+   * 正方向ならプラス、
+   * 逆方向ならマイナス
+   */
+  const progressDelta =
+    projection.routeProgressMeters -
+    previousProgress;
+
+  result.angleDifference =
+    angleDifference;
+
+  result.progressDelta =
+    progressDelta;
+
+  const headingIsOpposite =
+    angleDifference >=
+    WRONG_WAY_ANGLE_THRESHOLD;
+
+  const progressIsDecreasing =
+    progressDelta <
+    -WRONG_WAY_PROGRESS_TOLERANCE_METERS;
+
+  const isWrongDirectionSample =
+    headingIsOpposite &&
+    progressIsDecreasing;
+
+  if (isWrongDirectionSample) {
+    appState.wrongWayCount += 1;
+
+    appState.wrongWayDistanceMeters +=
+      Math.abs(progressDelta);
+
+    result.isWrongWay = true;
+
+  } else {
+    RerouteManager.resetWrongWayState();
+  }
+
+  RerouteManager.saveRouteCheckState(
+    currentLocation,
+    projection
+  );
+
+  return result;
+}
+  static saveRouteCheckState(
+  currentLocation,
+  projection
+) {
+  appState.lastRouteCheckLocation = {
+    lat: currentLocation.lat,
+    lng: currentLocation.lng
+  };
+
+  appState.lastRouteProgressMeters =
+    projection.routeProgressMeters;
+
+  appState.lastRouteSegmentIndex =
+    projection.segmentIndex;
+}
+  static resetWrongWayState() {
+  appState.wrongWayCount = 0;
+  appState.wrongWayDistanceMeters = 0;
+  appState.wrongWayAngle = null;
+  appState.isWrongWay = false;
+}
+
+  static getBearingDegrees(
+  from,
+  to
+) {
+  const lat1 =
+    from.lat *
+    Math.PI / 180;
+
+  const lat2 =
+    to.lat *
+    Math.PI / 180;
+
+  const deltaLng =
+    (to.lng - from.lng) *
+    Math.PI / 180;
+
+  const y =
+    Math.sin(deltaLng) *
+    Math.cos(lat2);
+
+  const x =
+    Math.cos(lat1) *
+      Math.sin(lat2) -
+    Math.sin(lat1) *
+      Math.cos(lat2) *
+      Math.cos(deltaLng);
+
+  const bearing =
+    Math.atan2(y, x) *
+    180 / Math.PI;
+
+  return (
+    bearing + 360
+  ) % 360;
+}
+  static getAngleDifference(
+  a,
+  b
+) {
+  let difference =
+    Math.abs(a - b) % 360;
+
+  if (difference > 180) {
+    difference =
+      360 - difference;
+  }
+
+  return difference;
+}
   static async recalculate() {
     if (appState.rerouting) {
       console.log("Reroute already in progress");
@@ -1272,10 +1773,22 @@ class RerouteManager {
 
       if (!newRoute) {
         console.warn("REROUTE FAILED");
-        setText("naviNext", "REROUTE FAILED");
+        setText(
+          "naviNext",
+          "REROUTE FAILED"
+        );
+
+  /*
+   * 次のGPS更新直後に
+   * 再度APIを呼ぶことを防ぐ
+   */
+        appState.offRouteCount = 0;
+
+        RerouteManager
+          .resetWrongWayState();
+
         return;
       }
-
       RerouteManager.applyNewRoute(newRoute);
 
       console.warn("REROUTE DONE");
@@ -1293,19 +1806,42 @@ class RerouteManager {
   }
 
   static applyNewRoute(newRoute) {
-    appState.routeResults[appState.selectedRouteIndex].route = newRoute;
-    appState.route = newRoute;
-    appState.routePoints = MiniMap.decodeRoutePoints(newRoute);
+  appState.routeResults[
+    appState.selectedRouteIndex
+  ].route = newRoute;
 
-    appState.currentStepIndex = 0;
-    appState.currentStepRemainMeters = null;
-    appState.offRouteCount = 0;
+  appState.route = newRoute;
 
-    RouteManager.drawSelectedRoute(appState.selectedRouteIndex);
-    NavigationManager.updateCurrentStep();
-    NavigationManager.updateStepDisplay();
-    MiniMap.draw(appState.currentLocation, appState.routePoints);
-  }
+  appState.routePoints =
+    MiniMap.decodeRoutePoints(
+      newRoute
+    );
+
+  appState.currentStepIndex = 0;
+  appState.currentStepRemainMeters = null;
+
+  appState.offRouteCount = 0;
+  appState.routeDeviationMeters = null;
+
+  // 逆走判定状態を初期化
+  appState.lastRouteCheckLocation = null;
+  appState.lastRouteProgressMeters = null;
+  appState.lastRouteSegmentIndex = null;
+
+  RerouteManager.resetWrongWayState();
+
+  RouteManager.drawSelectedRoute(
+    appState.selectedRouteIndex
+  );
+
+  NavigationManager.updateCurrentStep();
+  NavigationManager.updateStepDisplay();
+
+  MiniMap.draw(
+    appState.currentLocation,
+    appState.routePoints
+  );
+}
 }
 
 // 既存コード互換ラッパー
