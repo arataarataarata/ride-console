@@ -1649,22 +1649,32 @@ input::placeholder {
 #screen-dev .dev-console:last-child {
   margin-bottom: 0;
 }
-.rc-brand,
-.rc-screen-logo {
+/* ===========================
+   Ride Console Header Logo
+   =========================== */
+
+.rc-brand {
   display: flex;
   align-items: center;
-}
-
-.rc-screen-logo {
-  justify-content: center;
-  width: 100%;
-  margin-bottom: 8px;
+  flex: 1;
+  min-width: 0;
 }
 
 .rc-header-logo {
   display: block;
-  width: 90px;
-  max-width: 45vw;
+  width: 200px;      /* 好みで180～220px */
+  max-width: 55vw;
   height: auto;
-  object-fit: contain;
+  background: transparent;
+}
+
+.home-header.rc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rc-status {
+  flex-shrink: 0;
 }
