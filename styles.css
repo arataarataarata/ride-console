@@ -1678,7 +1678,7 @@ input::placeholder {
 
 .rc-header-logo {
   display: block;
-  width: 110px;
+  width: 60px;
   max-width: 32vw;
   height: auto;
   margin: 0;
@@ -1693,17 +1693,17 @@ input::placeholder {
 
 /* HOME */
 #screen-home .rc-header-logo {
-  width: 115px;
+  width: 60px;
 }
 
 /* MAP */
 #screen-map .rc-header-logo {
-  width: 90px;
+  width: 960px;
 }
 
 /* NAVI */
 #screen-navi .rc-header-logo {
-  width: 80px;
+  width: 60px;
 }
 
 /* MAPヘッダー */
@@ -1721,14 +1721,14 @@ input::placeholder {
 /* 小さい画面 */
 @media (max-width: 480px) {
   #screen-home .rc-header-logo {
-    width: 105px;
+    width: 60px;
   }
 
   #screen-map .rc-header-logo {
-    width: 80px;
+    width: 60px;
   }
 
   #screen-navi .rc-header-logo {
-    width: 70px;
+    width: 60px;
   }
 }
