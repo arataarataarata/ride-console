@@ -1732,3 +1732,25 @@ input::placeholder {
     width: 60px;
   }
 }
+/* ==============================
+   Ride Console logo override
+   ============================== */
+
+#screen-home .rc-header-logo,
+#screen-map .rc-header-logo,
+#screen-navi .rc-header-logo {
+  display: block !important;
+  width: 60px !important;
+  max-width: 60px !important;
+  min-width: 60px !important;
+  height: auto !important;
+  flex: 0 0 60px !important;
+  object-fit: contain !important;
+}
+
+.rc-brand,
+.rc-screen-logo {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  max-width: none !important;
+}
