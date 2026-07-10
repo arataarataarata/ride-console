@@ -1206,8 +1206,6 @@ function selectHistoryDestination(name) {
 // ==============================
 // 10. Reroute Manager
 // ==============================
-class RerouteManager {
-
   // 前回位置から最低5m移動した場合だけ逆走判定
   const WRONG_WAY_MIN_MOVEMENT_METERS = 5;
 
@@ -1225,7 +1223,8 @@ class RerouteManager {
 
   // 数m程度の進捗変動はGPS誤差として無視
   const WRONG_WAY_PROGRESS_TOLERANCE_METERS = 2;
-  
+
+class RerouteManager { 
 static checkDeviation() {
   if (!appState.route || !appState.currentLocation) {
     return;
