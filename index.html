@@ -1,235 +1,371 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Ride Console</title>
+
   <link rel="stylesheet" href="./plan-b.css">
-  <link rel="icon" type="image/png" href="favicon.ico">
+  <link rel="icon" href="./favicon.ico" type="image/x-icon">
 </head>
+
 <body>
 
 <div id="app">
 
-<!-- HOME -->
-<section id="screen-home" class="screen active">
-  
+  <!-- ============================== -->
+  <!-- HOME -->
+  <!-- ============================== -->
+  <section id="screen-home" class="screen active">
+
+    <header class="home-header rc-header">
+
+      <div class="rc-brand">
+        <img
+          src="./rc-header-logo.png"
+          alt="Ride Console"
+          class="rc-header-logo"
+        >
+      </div>
+
+      <div class="rc-status">
+        <div>
+          GPS <span class="rc-dot ok"></span>
+        </div>
+
+        <button
+          id="bleToggleButton"
+          class="ble-button rc-ble-mini off"
+          onclick="BLE.toggle()"
+        >
+          BLE
+        </button>
+      </div>
+
+    </header>
+
+    <div class="rc-card" onclick="showScreen('map')">
+      <div class="rc-card-icon">⌕</div>
+
+      <div class="rc-card-main">
+        <div class="rc-card-title">Destination</div>
+        <div class="rc-card-sub">Search &amp; Routing</div>
+      </div>
+    </div>
+
+    <div class="rc-card" onclick="startHomeRoute()">
+      <div class="rc-card-icon">⌂</div>
+
+      <div class="rc-card-main">
+        <div class="rc-card-title">Home</div>
+        <div id="homeRouteText" class="rc-card-sub">unset</div>
+      </div>
+    </div>
+
+    <div class="rc-card" onclick="toggleFavoriteList()">
+      <div class="rc-card-icon">★</div>
+
+      <div class="rc-card-main">
+        <div class="rc-card-title">Favorite</div>
+        <div class="rc-card-sub">unregistered</div>
+      </div>
+    </div>
+
+    <div id="favoriteList" class="favorite-list"></div>
+
+    <div class="rc-card" onclick="toggleHistoryList()">
+      <div class="rc-card-icon">◷</div>
+
+      <div class="rc-card-main">
+        <div class="rc-card-title">History</div>
+        <div class="rc-card-sub">recent destination</div>
+      </div>
+    </div>
+
+    <div id="historyList" class="history-list"></div>
+
+    <div class="rc-section-title">LAST ROUTE</div>
+
+    <div class="rc-card" onclick="startLastRoute()">
+      <div class="rc-card-icon">↻</div>
+
+      <div class="rc-card-main">
+        <div class="rc-card-title">Last Route</div>
+        <div id="lastRouteText" class="rc-card-sub">No</div>
+      </div>
+    </div>
+
+    <div class="rc-section-title">BIKE</div>
+
+    <div class="rc-bike-card">
+      <div>
+        <div class="rc-card-title">
+          Harley-Davidson FLH1200 Shovelhead "Catherine"
+        </div>
+
+        <div class="rc-card-sub">
+          12.6V / Oil --°C
+        </div>
+      </div>
+    </div>
+
+  </section>
 
 
-<header class="home-header rc-header">
+  <!-- ============================== -->
+  <!-- MAP -->
+  <!-- ============================== -->
+  <section id="screen-map" class="screen">
 
-  <div class="rc-brand">
-    <img
-      src="./rc-header-logo.png"
-      alt="Ride Console"
-      class="rc-header-logo"
+    <button
+      class="round-button"
+      onclick="showScreen('dev')"
     >
-  </div>
-    <div class="rc-status">
-      <div>GPS <span class="rc-dot ok"></span></div>
-      <button id="bleToggleButton" class="ble-button rc-ble-mini off" onclick="BLE.toggle()">
-        BLE
-      </button>
+      DEV
+    </button>
+
+    <button
+      class="rc-home-button"
+      onclick="showScreen('home')"
+    >
+      HOME
+    </button>
+
+    <header class="map-header">
+
+      <div class="rc-screen-logo">
+        <img
+          src="./rc-header-logo.png"
+          alt="Ride Console"
+          class="rc-header-logo"
+        >
+      </div>
+
+      <div>
+        <div class="app-kicker">ROUTE PLANNER</div>
+        <h1>Map</h1>
+      </div>
+
+    </header>
+
+    <div class="search-card">
+      <div class="label">DESTINATION</div>
+
+      <div class="search-input">
+        <span>⌕</span>
+
+        <input
+          id="destinationInput"
+          type="text"
+          placeholder="Input destination"
+        >
+      </div>
     </div>
-  </header>
 
-<div class="rc-card" onclick="showScreen('map')">
-  <div class="rc-card-icon">⌕</div>
-    <div class="rc-card-main">
-    <div class="rc-card-title">Destination</div>
-    <div class="rc-card-sub">Serch&Routing</div>
-  </div>
-</div>
-
-  <div class="rc-card" onclick="startHomeRoute()">
-  <div class="rc-card-icon">⌂</div>
-  <div class="rc-card-main">
-    <div class="rc-card-title">Home</div>
-    <div id="homeRouteText" class="rc-card-sub">unset</div>
-  </div>
-</div>
-  
-  <div class="rc-card" onclick="toggleFavoriteList()">
-    <div class="rc-card-icon">★</div>
-    <div class="rc-card-main">
-      <div class="rc-card-title">Favorite</div>
-      <div class="rc-card-sub">un-resistered</div>
+    <div id="map" class="map-panel">
+      <div class="map-overlay">
+        <div class="map-title">LIVE MAP</div>
+        <div class="map-sub">Route preview</div>
+      </div>
     </div>
-  </div>
-  
- <div id="favoriteList" class="favorite-list"></div>
- 
-  <div class="rc-card" onclick="toggleHistoryList()">
-  <div class="rc-card-icon">◷</div>
-  <div class="rc-card-main">
-    <div class="rc-card-title">History</div>
-    <div class="rc-card-sub">recent destination</div>
-  </div>
-</div>
 
-<div id="historyList" class="history-list"></div>
-
-
-  <div class="rc-section-title">LAST ROUTE</div>
-
-<div class="rc-card" onclick="startLastRoute()">
-  <div class="rc-card-icon">↻</div>
-  <div class="rc-card-main">
-    <div class="rc-card-title">Last Route</div>
-    <div id="lastRouteText" class="rc-card-sub">No</div>
-  </div>
-</div>
-
-  <div class="rc-section-title">BIKE</div>
-
-  <div class="rc-bike-card">
-    <div>
-      <div class="rc-card-title">Herley-Davidson FLH1200 Shovelhead "Catherine"</div>
-      <div class="rc-card-sub">12.6V / Oil --°C</div>
+    <div class="route-section-header">
+      <div class="label">ROUTES</div>
+      <div class="section-title">Choose your ride</div>
     </div>
-  </div>
 
-</section>
+    <div id="routeOptions" class="route-options"></div>
 
-  
-<!-- MAP -->
-<section id="screen-map" class="screen">
+    <button
+      id="startNavigationButton"
+      class="map-start-button"
+      onclick="startNavigation()"
+    >
+      START
+    </button>
 
-  <button class="round-button" onclick="showScreen('dev')">DEV</button>
-  <button class="rc-home-button" onclick="showScreen('home')">HOME</button>
+  </section>
 
-  <header class="map-header">
+
+  <!-- ============================== -->
+  <!-- NAVI -->
+  <!-- ============================== -->
+  <section id="screen-navi" class="screen">
+
     <div class="rc-screen-logo">
-    <img
-      src="./rc-header-logo.png"
-      alt="Ride Console"
-      class="rc-header-logo"
+      <img
+        src="./rc-header-logo.png"
+        alt="Ride Console"
+        class="rc-header-logo"
+      >
+    </div>
+
+    <div class="navi-main rc-navi-main">
+
+      <div class="rc-navi-text">
+        <div
+          class="navi-distance"
+          id="naviDistance"
+        >
+          460m
+        </div>
+
+        <div
+          class="navi-instruction"
+          id="naviInstruction"
+        >
+          RIGHT
+        </div>
+
+        <div
+          class="navi-road"
+          id="naviRoad"
+        >
+          Route ready
+        </div>
+      </div>
+
+    </div>
+
+    <div class="navi-info-row navi-info-hidden">
+
+      <div>
+        <div class="label">NEXT</div>
+        <div id="naviNext">--</div>
+      </div>
+
+      <div>
+        <div class="label">DISTANCE</div>
+        <div id="naviTotalDistance">--</div>
+      </div>
+
+      <div>
+        <div class="label">ETA</div>
+        <div id="naviEta">--</div>
+      </div>
+
+    </div>
+
+    <div
+      id="miniMapContainer"
+      class="rc-mini-map-container"
     >
-  </div>
-    <div>
-      <div class="app-kicker">ROUTE PLANNER</div>
-      <h1>Map</h1>
+      <canvas
+        id="miniMap"
+        width="320"
+        height="320"
+      ></canvas>
     </div>
-  </header>
 
-  <div class="search-card">
-    <div class="label">DESTINATION</div>
-    <div class="search-input">
-      <span>⌕</span>
-      <input
-        id="destinationInput"
-        type="text"
-        placeholder="imput destination">
+    <div class="bottom-buttons rc-bottom-buttons">
+
+      <button class="primary-button">
+        PAUSE
+      </button>
+
+      <button
+        class="primary-button"
+        onclick="showScreen('dev')"
+      >
+        DEV
+      </button>
+
+      <button
+        class="danger-button"
+        onclick="finishNavigation()"
+      >
+        END
+      </button>
+
     </div>
-  </div>
 
-  <div id="map" class="map-panel">
-    <div class="map-overlay">
-      <div class="map-title">LIVE MAP</div>
-      <div class="map-sub">Route preview</div>
-    </div>
-  </div>
+  </section>
 
-  <div class="route-section-header">
-    <div class="label">ROUTES</div>
-    <div class="section-title">Choose your ride</div>
-  </div>
 
-  <!-- JavaScriptがここへルート候補を生成 -->
-  <div id="routeOptions" class="route-options"></div>
+  <!-- ============================== -->
+  <!-- DEV -->
+  <!-- ============================== -->
+  <section id="screen-dev" class="screen">
 
-<button
-  id="startNavigationButton"
-  class="map-start-button"
-  onclick="startNavigation()">
-  START
-</button>
-  
-</section>
-
-<!-- NAVI -->
-<section id="screen-navi" class="screen">
-  <div class="rc-screen-logo">
-    <img
-      src="./rc-header-logo.png"
-      alt="Ride Console"
-      class="rc-header-logo"
+    <div
+      id="developerPanel"
+      class="developer-panel"
     >
-  </div>
+      <div class="dev-title">
+        DEVELOPER MODE
+      </div>
 
-  <!-- 既存NAVI内容 -->
+      <div
+        id="devLine1"
+        class="dev-console"
+      ></div>
 
-</section>
-  <div class="navi-main rc-navi-main">
-
-    <div class="rc-navi-text">
-      <div class="navi-distance" id="naviDistance">460m</div>
-      <div class="navi-instruction" id="naviInstruction">RIGHT</div>
-      <div class="navi-road" id="naviRoad">Route ready</div>
+      <div
+        id="devLine2"
+        class="dev-console"
+      ></div>
     </div>
-  </div>
 
-  <div class="navi-info-row navi-info-hidden">
-    <div>
-      <div class="label">NEXT</div>
-      <div id="naviNext">--</div>
+    <div class="dev-section">
+
+      <h3>NAVI DEBUG</h3>
+
+      <div>
+        Step:
+        <span id="debugNavStepIndex">-</span>
+      </div>
+
+      <div>
+        Nearest:
+        <span id="debugNearestIndex">-</span>
+      </div>
+
+      <div>
+        Points:
+        <span id="debugPointCount">-</span>
+      </div>
+
+      <div>
+        Remain:
+        <span id="debugRemainMeters">-</span> m
+      </div>
+
+      <div>
+        RouteRemain:
+        <span id="debugRouteRemain">-</span> m
+      </div>
+
+      <div>
+        DirectRemain:
+        <span id="debugDirectRemain">-</span> m
+      </div>
+
+      <div>
+        PathStart:
+        <span id="debugPathStart">-</span> m
+      </div>
+
+      <div>
+        PathEnd:
+        <span id="debugPathEnd">-</span> m
+      </div>
+
     </div>
-    <div>
-      <div class="label">DISTANCE</div>
-      <div id="naviTotalDistance">--</div>
-    </div>
-    <div>
-      <div class="label">ETA</div>
-      <div id="naviEta">--</div>
-    </div>
-  </div>
 
-  <div id="miniMapContainer" class="rc-mini-map-container">
-    <canvas id="miniMap" width="320" height="320"></canvas>
-  </div>
+  </section>
 
-  <div class="bottom-buttons rc-bottom-buttons">
-    <button class="primary-button">PAUSE</button>
-    <button class="primary-button" onclick="showScreen('dev')">DEV</button>
-    <button class="danger-button" onclick="finishNavigation()">END</button>
-  </div>
-
-</section>
-
-<!-- DEV -->
-<section id="screen-dev" class="screen">
-  <div id="developerPanel" class="developer-panel">
-    <div class="dev-title">DEVELOPER MODE</div>
-    <div id="devLine1" class="dev-console"></div>
-    <div id="devLine2" class="dev-console"></div>
-  </div>
-
-  <div class="dev-section">
-  <h3>NAVI DEBUG</h3>
-
-  <div>Step: <span id="debugNavStepIndex">-</span></div>
-  <div>Nearest: <span id="debugNearestIndex">-</span></div>
-  <div>Points: <span id="debugPointCount">-</span></div>
-
-  <div>Remain: <span id="debugRemainMeters">-</span> m</div>
-  <div>RouteRemain: <span id="debugRouteRemain">-</span> m</div>
-  <div>DirectRemain: <span id="debugDirectRemain">-</span> m</div>
-
-  <div>PathStart: <span id="debugPathStart">-</span> m</div>
-  <div>PathEnd: <span id="debugPathEnd">-</span> m</div>
 </div>
-</section>
 
-</div><!-- /app -->
 
-<script src="ble.js"></script>
+<script src="./ble.js"></script>
 <script src="./app2.js?v=001"></script>
- 
+
 <script
   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA9EP_wOYfkx3CCjc8DWZ69ObxhiOPhyMM&libraries=places,geometry&callback=initMap"
   async
-  defer>
-</script>
+  defer
+></script>
 
 </body>
 </html>
