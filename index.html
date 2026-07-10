@@ -15,11 +15,30 @@
 <section id="screen-home" class="screen active">
   
 
- <header class="home-header rc-header">
-    <div>
-      <div class="app-kicker">HARLEY DIGITAL COCKPIT</div>
-      <h1 class="rc-title">Ride Console</h1>
-    </div>
+
+<header class="home-header rc-header">
+
+  <div class="rc-brand">
+    <img
+      src="./rc-header-logo.png"
+      alt="Ride Console"
+      class="rc-header-logo"
+    >
+  </div>
+
+  <div class="rc-status">
+    <div>GPS <span class="rc-dot ok"></span></div>
+
+    <button
+      id="bleToggleButton"
+      class="ble-button rc-ble-mini off"
+      onclick="BLE.toggle()"
+    >
+      BLE
+    </button>
+  </div>
+
+</header>
 
     <div class="rc-status">
       <div>GPS <span class="rc-dot ok"></span></div>
@@ -95,6 +114,13 @@
   <button class="rc-home-button" onclick="showScreen('home')">HOME</button>
 
   <header class="map-header">
+    <div class="rc-screen-logo">
+    <img
+      src="./rc-header-logo.png"
+      alt="Ride Console"
+      class="rc-header-logo"
+    >
+  </div>
     <div>
       <div class="app-kicker">ROUTE PLANNER</div>
       <h1>Map</h1>
@@ -138,7 +164,17 @@
 
 <!-- NAVI -->
 <section id="screen-navi" class="screen">
+  <div class="rc-screen-logo">
+    <img
+      src="./rc-header-logo.png"
+      alt="Ride Console"
+      class="rc-header-logo"
+    >
+  </div>
 
+  <!-- 既存NAVI内容 -->
+
+</section>
   <div class="navi-main rc-navi-main">
 
     <div class="rc-navi-text">
