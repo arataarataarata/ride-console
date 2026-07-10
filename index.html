@@ -14,37 +14,37 @@
 
 <div id="app">
 
-  <!-- ============================== -->
-  <!-- HOME -->
-  <!-- ============================== -->
-  <section id="screen-home" class="screen active">
+<!-- ============================== -->
+<!-- HOME -->
+<!-- ============================== -->
+<section id="screen-home" class="screen active">
 
-    <header class="home-header rc-header">
+  <header class="home-header rc-header">
 
-      <div class="rc-header-logo">
-        <img
-          src="./rc-header-logo.png"
-          alt="Ride Console"
-          class="rc-header-logo"
-        >
+    <div class="rc-brand">
+      <img
+        src="./rc-header-logo.png"
+        alt="Ride Console"
+        class="rc-header-logo"
+      >
+    </div>
+
+    <div class="rc-status">
+      <div>
+        GPS <span class="rc-dot ok"></span>
       </div>
 
-      <div class="rc-status">
-        <div>
-          GPS <span class="rc-dot ok"></span>
-        </div>
+      <button
+        id="bleToggleButton"
+        class="ble-button rc-ble-mini off"
+        onclick="BLE.toggle()"
+      >
+        BLE
+      </button>
+    </div>
 
-        <button
-          id="bleToggleButton"
-          class="ble-button rc-ble-mini off"
-          onclick="BLE.toggle()"
-        >
-          BLE
-        </button>
-      </div>
-
-    </header>
-
+  </header>
+  
     <div class="rc-card" onclick="showScreen('map')">
       <div class="rc-card-icon">⌕</div>
 
