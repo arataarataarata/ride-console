@@ -396,3 +396,86 @@ button{
   font-size:16px;
   font-weight:800;
 }
+/* ==============================
+   Ride Console logo
+   ============================== */
+
+.rc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rc-brand {
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.rc-screen-logo {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+.rc-header-logo {
+  display: block;
+  width: 60px;
+  max-width: 32vw;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  object-fit: contain;
+  background: transparent;
+}
+
+.rc-status {
+  flex-shrink: 0;
+}
+
+/* HOME */
+#screen-home .rc-header-logo {
+  width: 60px;
+}
+
+/* MAP */
+#screen-map .rc-header-logo {
+  width: 60px;
+}
+
+/* NAVI */
+#screen-navi .rc-header-logo {
+  width: 60px;
+}
+
+/* MAPヘッダー */
+.map-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* NAVIロゴの余白を最小化 */
+#screen-navi .rc-screen-logo {
+  margin-bottom: 6px;
+}
+
+/* 小さい画面 */
+@media (max-width: 480px) {
+  #screen-home .rc-header-logo {
+    width: 60px;
+  }
+
+  #screen-map .rc-header-logo {
+    width: 60px;
+  }
+
+  #screen-navi .rc-header-logo {
+    width: 60px;
+  }
+}
