@@ -429,7 +429,7 @@ button{
 /* 共通ロゴ */
 .rc-header-logo {
   display: block;
-  width: 120px;
+  width: 200px;
   max-width: 40vw;
   height: auto;
   margin: 0;
@@ -445,7 +445,7 @@ button{
 
 /* HOME */
 #screen-home .rc-header-logo {
-  width: 120px;
+  width: 200px;
 }
 
 /* MAP */
