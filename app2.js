@@ -1739,7 +1739,7 @@ class HistoryManager {
          ⌂
         </button>
 
-        <button class="history-delete" onclick="event.stopPropagation(); deleteHistoryItem(${index})">削除</button>
+        <button class="history-delete" onclick="event.stopPropagation(); deleteHistoryItem(${index})">🗑</button>
       </div>
     `).join("");
   }
