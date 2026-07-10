@@ -1662,7 +1662,7 @@ input::placeholder {
 
 .rc-header-logo {
   display: block;
-  width: 200px;      /* 好みで180～220px */
+  width: 50px;      /* 好みで180～220px */
   max-width: 55vw;
   height: auto;
   background: transparent;
