@@ -1649,3 +1649,22 @@ input::placeholder {
 #screen-dev .dev-console:last-child {
   margin-bottom: 0;
 }
+.rc-brand,
+.rc-screen-logo {
+  display: flex;
+  align-items: center;
+}
+
+.rc-screen-logo {
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.rc-header-logo {
+  display: block;
+  width: 140px;
+  max-width: 45vw;
+  height: auto;
+  object-fit: contain;
+}
