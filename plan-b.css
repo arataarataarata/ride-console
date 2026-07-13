@@ -429,8 +429,8 @@ button{
 /* 共通ロゴ */
 .rc-header-logo {
   display: block;
-  width: 200px;
-  max-width: 40vw;
+  width: 300px;
+  max-width: 1000vw;
   height: auto;
   margin: 0;
   padding: 0;
