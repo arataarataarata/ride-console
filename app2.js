@@ -2195,38 +2195,38 @@ if (drawn) {
     ctx.fill();
   }
 
-static getBackTrackStartIndex(
-  nearestIndex,
-  routePoints,
-  backTrackMeters = MINI_MAP.BACK_TRACK_METERS
-) {
-  if (
-    !Array.isArray(routePoints) ||
-    routePoints.length < 2
+  static getBackTrackStartIndex(
+    nearestIndex,
+    routePoints,
+    backTrackMeters = MINI_MAP.BACK_TRACK_METERS
   ) {
-    return 0;
-  }
-
-  let startIndex = nearestIndex;
-  let accumulatedDistance = 0;
-
-  for (let i = nearestIndex; i > 0; i--) {
-    const segmentDistance = getDistanceMeters(
-      routePoints[i],
-      routePoints[i - 1]
-    );
-
-    accumulatedDistance += segmentDistance;
-    startIndex = i - 1;
-
-    if (accumulatedDistance >= backTrackMeters) {
-      break;
+    if (
+      !Array.isArray(routePoints) ||
+      routePoints.length < 2
+    ) {
+      return 0;
     }
+
+    let startIndex = nearestIndex;
+    let accumulatedDistance = 0;
+
+    for (let i = nearestIndex; i > 0; i--) {
+      const segmentDistance = getDistanceMeters(
+        routePoints[i],
+        routePoints[i - 1]
+      );
+
+      accumulatedDistance += segmentDistance;
+      startIndex = i - 1;
+
+      if (accumulatedDistance >= backTrackMeters) {
+        break;
+      }
+    }
+
+    return startIndex;
   }
-
-  return startIndex;
 }
-
 
 // 既存コード互換ラッパー
 function decodeRoutePoints(route) {
@@ -2240,7 +2240,6 @@ function drawMiniMap(current, routePoints) {
 function routePointsToBleMiniMap(current, routePoints) {
   return MiniMap.toBlePoints(current, routePoints);
 }
-
 // ==============================
 // 12. BLE Sender
 // ==============================
