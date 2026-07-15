@@ -16,7 +16,11 @@ const DEFAULT_POSITION = {
 const ROUTE_DEVIATION_EXTRA_METERS = 10;
 const ROUTE_DEVIATION_COUNT_LIMIT = 3;
 const STEP_ADVANCE_THRESHOLD_METERS = 20;
-const BLE_SEND_INTERVAL_MS = 3000;
+const BLE_SEND_INTERVAL_MS = 3000; // 現在Step終端への接近判定
+const STEP_ADVANCE_THRESHOLD_METERS = 20; // 次Stepを何m進んだら右左折完了と判定するか
+const STEP_CONFIRM_PROGRESS_METERS = 8; // 次StepのPolylineから何m以内なら次Step上とみなすか
+const STEP_CONFIRM_ROUTE_DISTANCE_METERS = 15;
+
 
 const HISTORY_KEY = "rideConsoleDestinationHistory";
 const HISTORY_LIMIT = 10;
@@ -956,21 +960,48 @@ static updateStepDisplay() {
     if (
       remainInfo.routeRemain < STEP_ADVANCE_THRESHOLD_METERS &&
       index < steps.length - 1
-    ) {
-      index += 1;
-      appState.currentStepIndex = index;
+      ) {
+      const nextStep = steps[index + 1];
 
-      const nextRemainInfo = NavigationManager.getRemainingDistanceToStepEnd(
-        appState.currentLocation,
-        steps[index]
-      );
+      const nextRemainInfo =
+        NavigationManager.getRemainingDistanceToStepEnd(
+          appState.currentLocation,
+          nextStep
+        );
 
-      if (nextRemainInfo) {
-        appState.currentStepRemainMeters = nextRemainInfo.remainMeters;
+  // 次StepのPolyline付近にいるか
+      const isNearNextStep =
+        nextRemainInfo &&
+        nextRemainInfo.nearestDistance <=
+          STEP_CONFIRM_ROUTE_DISTANCE_METERS;
+
+  // 次Stepを規定距離以上走ったか
+      const hasProgressedOnNextStep =
+        nextRemainInfo &&
+        nextRemainInfo.progressMeters >=
+          STEP_CONFIRM_PROGRESS_METERS;
+
+  // 次Step上を数m走行して初めてStepを更新
+      if (
+        isNearNextStep &&
+        hasProgressedOnNextStep
+      ) {
+        index += 1;
+        appState.currentStepIndex = index;
+
+        appState.currentStepRemainMeters =
+          nextRemainInfo.remainMeters;
+      } else {
+    // 交差点手前・信号待ち中は現在Stepを維持
+        appState.currentStepRemainMeters =
+          remainInfo.remainMeters;
       }
     } else {
-      appState.currentStepRemainMeters = remainInfo.remainMeters;
+      appState.currentStepRemainMeters =
+        remainInfo.remainMeters;
     }
+
+
 
     const currentStep = steps[index];
     const nextStep = steps[index + 1];
@@ -1015,6 +1046,16 @@ static updateStepDisplay() {
 
     if (!path || path.length < 2) {
       return null;
+    }
+    // StepのPolyline全長
+    let pathTotalMeters = 0;
+
+    for (let i = 0; i < path.length - 1; i++) {
+      pathTotalMeters +=
+        google.maps.geometry.spherical.computeDistanceBetween(
+          path[i],
+          path[i + 1]
+        );
     }
 
     let nearestSegmentIndex = 0;
@@ -1061,7 +1102,10 @@ static updateStepDisplay() {
         path[i + 1]
       );
     }
-
+    const progressMeters = Math.max(
+      0,
+      pathTotalMeters - routeRemain
+    );
     const startPoint = latLngToPlain(path[0]);
     const endPoint = latLngToPlain(path[path.length - 1]);
 
@@ -1075,6 +1119,8 @@ static updateStepDisplay() {
       nearestIndex: nearestSegmentIndex,
       nearestSegmentIndex,
       pointCount: path.length,
+      pathTotalMeters: Math.round(pathTotalMeters),
+      progressMeters: Math.round(progressMeters),
       remainMeters: Math.round(remainMeters),
       routeRemain: Math.round(routeRemain),
       directRemain: Math.round(nearestDistance),
@@ -1091,9 +1137,12 @@ static updateStepDisplay() {
       nearestIndex: nearestSegmentIndex,
       nearestSegmentIndex,
       pointCount: path.length,
+      pathTotalMeters: Math.round(pathTotalMeters),
+      progressMeters: Math.round(progressMeters),
       distanceToPathStart: Math.round(distanceToPathStart),
       distanceToPathEnd: Math.round(distanceToPathEnd)
     };
+    
   }
   static projectPointToSegment(p, a, b) {
     const latScale = 111320;
