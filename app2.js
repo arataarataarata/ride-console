@@ -36,6 +36,24 @@ const HISTORY_KEY = "rideConsoleDestinationHistory";
 const HISTORY_LIMIT = 10;
 const HOME_KEY = "rideConsoleHome";
 
+const MINI_MAP = {
+  CANVAS_W: 256,
+  CANVAS_H: 256,
+  MAP_RANGE_METERS: 500,
+  SELF_X_RATIO: 0.5,
+  // 従来より少し上へ
+  SELF_Y_RATIO: 0.65,
+  LOOK_AHEAD_METERS: 40,
+  // 追加：走行済みルートを後方100m残す
+  BACK_TRACK_METERS: 100,
+  BLE_W: 32,
+  BLE_H: 32,
+  BLE_SELF_X: 16,
+  // OLED側も少し上へ
+  BLE_SELF_Y: 21,
+  MAX_BLE_POINTS: 100
+};
+
 const MANEUVER_ARROW_MAP = {
   DEPART: 17,
   DESTINATION: 18,
@@ -1913,25 +1931,52 @@ class MiniMap {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
-    ctx.beginPath();
-    ctx.moveTo(selfX, selfY);
+    const startIndex =
+  MiniMap.getBackTrackStartIndex(
+    nearestIndex,
+    routePoints
+  );
 
-    let drawn = false;
+ctx.beginPath();
 
-    for (let i = nearestIndex + 1; i < routePoints.length; i++) {
-      const local = MiniMap.toLocalMeters(current, routePoints[i]);
+let drawn = false;
 
-      const rx = local.x * cos - local.y * sin;
-      const ry = local.x * sin + local.y * cos;
+for (let i = startIndex; i < routePoints.length; i++) {
+  const local =
+    MiniMap.toLocalMeters(
+      current,
+      routePoints[i]
+    );
 
-      const x = selfX + rx * scale;
-      const y = selfY - ry * scale;
+  const rx =
+    local.x * cos -
+    local.y * sin;
 
-      ctx.lineTo(x, y);
-      drawn = true;
-    }
+  const ry =
+    local.x * sin +
+    local.y * cos;
 
-    if (drawn) ctx.stroke();
+  const x =
+    selfX +
+    rx * scale;
+
+  const y =
+    selfY -
+    ry * scale;
+
+  if (!drawn) {
+    ctx.moveTo(x, y);
+    drawn = true;
+  } else {
+    ctx.lineTo(x, y);
+  }
+}
+
+if (drawn) {
+  ctx.stroke();
+}
+
+
     MiniMap.drawSelfPoint(ctx, selfX, selfY);
     MiniMap.drawDebugPoints(
       ctx,
@@ -2002,37 +2047,97 @@ class MiniMap {
   }
 
   static toBlePoints(current, routePoints) {
-    if (!current || !Array.isArray(routePoints) || routePoints.length < 2) {
-      return [];
-    }
-
-    const nearestIndex = MiniMap.getNearestRoutePointIndex(current, routePoints);
-    const bearing = MiniMap.getBearingToNextRoutePoint(current, routePoints, 40);
-
-    const cos = Math.cos(bearing);
-    const sin = Math.sin(bearing);
-
-    const scale = MINI_MAP.BLE_W / MINI_MAP.MAP_RANGE_METERS;
-    const mapPoints = [];
-
-    for (let i = nearestIndex; i < routePoints.length; i++) {
-      const local = MiniMap.toLocalMeters(current, routePoints[i]);
-
-      const rx = local.x * cos - local.y * sin;
-      const ry = local.x * sin + local.y * cos;
-
-      const sx = Math.round(MINI_MAP.BLE_SELF_X + rx * scale);
-      const sy = Math.round(MINI_MAP.BLE_SELF_Y - ry * scale);
-
-      if (sx >= 0 && sx <= 31 && sy >= 0 && sy <= 31) {
-        mapPoints.push(`${sx},${sy}`);
-      }
-
-      if (mapPoints.length >= MINI_MAP.MAX_BLE_POINTS) break;
-    }
-
-    return mapPoints;
+  if (
+    !current ||
+    !Array.isArray(routePoints) ||
+    routePoints.length < 2
+  ) {
+    return [];
   }
+
+  const nearestIndex =
+    MiniMap.getNearestRoutePointIndex(
+      current,
+      routePoints
+    );
+
+  const startIndex =
+    MiniMap.getBackTrackStartIndex(
+      nearestIndex,
+      routePoints
+    );
+
+  const bearing =
+    MiniMap.getBearingToNextRoutePoint(
+      current,
+      routePoints,
+      40
+    );
+
+  const cos =
+    Math.cos(bearing);
+
+  const sin =
+    Math.sin(bearing);
+
+  const scale =
+    MINI_MAP.BLE_W /
+    MINI_MAP.MAP_RANGE_METERS;
+
+  const mapPoints = [];
+
+  for (
+    let i = startIndex;
+    i < routePoints.length;
+    i++
+  ) {
+    const local =
+      MiniMap.toLocalMeters(
+        current,
+        routePoints[i]
+      );
+
+    const rx =
+      local.x * cos -
+      local.y * sin;
+
+    const ry =
+      local.x * sin +
+      local.y * cos;
+
+    const sx =
+      Math.round(
+        MINI_MAP.BLE_SELF_X +
+        rx * scale
+      );
+
+    const sy =
+      Math.round(
+        MINI_MAP.BLE_SELF_Y -
+        ry * scale
+      );
+
+    if (
+      sx >= 0 &&
+      sx <= 31 &&
+      sy >= 0 &&
+      sy <= 31
+    ) {
+      mapPoints.push(
+        `${sx},${sy}`
+      );
+    }
+
+    if (
+      mapPoints.length >=
+      MINI_MAP.MAX_BLE_POINTS
+    ) {
+      break;
+    }
+  }
+
+  return mapPoints;
+}
 
   static getBearingToNextRoutePoint(
     current,
@@ -2104,6 +2209,38 @@ class MiniMap {
     ctx.fill();
   }
 }
+static getBackTrackStartIndex(
+  nearestIndex,
+  routePoints,
+  backTrackMeters = MINI_MAP.BACK_TRACK_METERS
+) {
+  if (
+    !Array.isArray(routePoints) ||
+    routePoints.length < 2
+  ) {
+    return 0;
+  }
+
+  let startIndex = nearestIndex;
+  let accumulatedDistance = 0;
+
+  for (let i = nearestIndex; i > 0; i--) {
+    const segmentDistance = getDistanceMeters(
+      routePoints[i],
+      routePoints[i - 1]
+    );
+
+    accumulatedDistance += segmentDistance;
+    startIndex = i - 1;
+
+    if (accumulatedDistance >= backTrackMeters) {
+      break;
+    }
+  }
+
+  return startIndex;
+}
+
 
 // 既存コード互換ラッパー
 function decodeRoutePoints(route) {
