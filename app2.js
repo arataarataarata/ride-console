@@ -15,7 +15,6 @@ const DEFAULT_POSITION = {
 
 const ROUTE_DEVIATION_EXTRA_METERS = 10;
 const ROUTE_DEVIATION_COUNT_LIMIT = 3;
-const STEP_ADVANCE_THRESHOLD_METERS = 20;
 const BLE_SEND_INTERVAL_MS = 3000; // 現在Step終端への接近判定
 const STEP_ADVANCE_THRESHOLD_METERS = 20; // 次Stepを何m進んだら右左折完了と判定するか
 const STEP_CONFIRM_PROGRESS_METERS = 8; // 次StepのPolylineから何m以内なら次Step上とみなすか
