@@ -114,7 +114,7 @@ let developerMode = false;
 
 const appState = {
   screen: "home",
-
+  speed: null,
   destination: null,
   routeResults: [],
   selectedRouteIndex: 0,
@@ -158,7 +158,8 @@ appState.navDebug = {
   routeRemain: null,
   directRemain: null,
   distanceToPathStart: null,
-  distanceToPathEnd: null
+  distanceToPathEnd: null,
+  speed: null
 };
 
 // 旧コード互換用。内部的には appState を正とする。
@@ -317,11 +318,13 @@ function startLocationWatch() {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
       const accuracy = position.coords.accuracy;
-
+      const speed = position.coords.speed;
+      
       appState.currentLocation = { lat, lng };
       appState.latestAccuracy = accuracy;
       appState.locationReady = true;
-
+      appState.speed = speed;
+      
       updateCurrentLocationOnMap(lat, lng, accuracy);
       updateCurrentStep();
       checkRouteDeviation();
@@ -1903,6 +1906,8 @@ function recalculateRoute() {
   return RerouteManager.recalculate();
 }
 
+
+
 // ==============================
 // 11. Mini Map
 // ==============================
@@ -2410,7 +2415,8 @@ function startBleNaviSender() {
 
   sendCurrentNaviToBle();
   sendCurrentMiniMapToBle();
-
+  sendCurrentGpsSpeedToBle();
+  
   bleNaviSenderTimer = setInterval(() => {
     sendCurrentNaviToBle();
     sendCurrentMiniMapToBle();
@@ -2480,6 +2486,32 @@ function sendCurrentMiniMapToBle() {
   BLE.sendText(payload);
 }
 
+function sendCurrentGpsSpeedToBle() {
+  if (!window.BLE) return;
+  if (!BLE.isEnabled()) return;
+  if (!BLE.isConnected()) return;
+
+  const speedMs = appState.speed;
+
+  // GPS速度が取得できない場合は送信しない
+  if (
+    speedMs === null ||
+    speedMs === undefined ||
+    !Number.isFinite(speedMs) ||
+    speedMs < 0
+  ) {
+    return;
+  }
+
+  const speedKmh = speedMs * 3.6;
+
+  // 明らかな異常値は送信しない
+  if (speedKmh > 180) {
+    return;
+  }
+
+  BLE.sendText(`SPD|${speedKmh.toFixed(1)}`);
+}
 // ==============================
 // 13. History Manager
 // ==============================
