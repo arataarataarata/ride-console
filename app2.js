@@ -1925,6 +1925,7 @@ class MiniMap {
       lng: point.lng()
     }));
   }
+  
 
   static draw(current, routePoints) {
     const canvas = document.getElementById("miniMap");
@@ -2079,8 +2080,89 @@ if (drawn) {
       ctx.stroke();
     });
   }
+  
+  static clipLineToBleArea(
+  x1,
+  y1,
+  x2,
+  y2,
+  minX = 0,
+  minY = 0,
+  maxX = 31,
+  maxY = 31
+) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
 
-  static toBlePoints(current, routePoints) {
+  const p = [
+    -dx,
+    dx,
+    -dy,
+    dy
+  ];
+
+  const q = [
+    x1 - minX,
+    maxX - x1,
+    y1 - minY,
+    maxY - y1
+  ];
+
+  let tStart = 0;
+  let tEnd = 1;
+
+  for (let i = 0; i < 4; i++) {
+    if (Math.abs(p[i]) < 0.000001) {
+      // 線分が境界と平行で、完全に画面外
+      if (q[i] < 0) {
+        return null;
+      }
+      continue;
+    }
+    const t = q[i] / p[i];
+    if (p[i] < 0) {
+      if (t > tEnd) {
+        return null;
+      }
+      if (t > tStart) {
+        tStart = t;
+      }
+    } else {
+      if (t < tStart) {
+        return null;
+      }
+      if (t < tEnd) {
+        tEnd = t;
+      }
+    }
+  }
+  return {
+    x1: x1 + tStart * dx,
+    y1: y1 + tStart * dy,
+    x2: x1 + tEnd * dx,
+    y2: y1 + tEnd * dy
+  };
+}
+  
+static addBlePoint(points, x, y) {
+  const sx = Math.max(
+    0,
+    Math.min(31, Math.round(x))
+  );
+  const sy = Math.max(
+    0,
+    Math.min(31, Math.round(y))
+  );
+  const pointText = `${sx},${sy}`;
+  if (
+    points.length > 0 &&
+    points[points.length - 1] === pointText
+  ) {
+    return;
+  }
+  points.push(pointText);
+}
+static toBlePoints(current, routePoints) {
   if (
     !current ||
     !Array.isArray(routePoints) ||
@@ -2108,17 +2190,18 @@ if (drawn) {
       40
     );
 
-  const cos =
-    Math.cos(bearing);
-
-  const sin =
-    Math.sin(bearing);
+  const cos = Math.cos(bearing);
+  const sin = Math.sin(bearing);
 
   const scale =
     MINI_MAP.BLE_W /
     MINI_MAP.MAP_RANGE_METERS;
 
-  const mapPoints = [];
+  /*
+   * まず全ルート点を画面座標へ変換する。
+   * この段階では画面外の点も残す。
+   */
+  const transformedPoints = [];
 
   for (
     let i = startIndex;
@@ -2139,28 +2222,61 @@ if (drawn) {
       local.x * sin +
       local.y * cos;
 
-    const sx =
-      Math.round(
+    transformedPoints.push({
+      x:
         MINI_MAP.BLE_SELF_X +
-        rx * scale
-      );
+        rx * scale,
 
-    const sy =
-      Math.round(
+      y:
         MINI_MAP.BLE_SELF_Y -
         ry * scale
+    });
+  }
+
+  const mapPoints = [];
+
+  /*
+   * 点単位ではなく、隣り合う線分単位で
+   * 32×32の画面内へクリッピングする。
+   */
+  for (
+    let i = 0;
+    i < transformedPoints.length - 1;
+    i++
+  ) {
+    const p1 = transformedPoints[i];
+    const p2 = transformedPoints[i + 1];
+
+    const clipped =
+      MiniMap.clipLineToBleArea(
+        p1.x,
+        p1.y,
+        p2.x,
+        p2.y
       );
 
-    if (
-      sx >= 0 &&
-      sx <= 31 &&
-      sy >= 0 &&
-      sy <= 31
-    ) {
-      mapPoints.push(
-        `${sx},${sy}`
-      );
+    if (!clipped) {
+      continue;
     }
+
+    MiniMap.addBlePoint(
+      mapPoints,
+      clipped.x1,
+      clipped.y1
+    );
+
+    if (
+      mapPoints.length >=
+      MINI_MAP.MAX_BLE_POINTS
+    ) {
+      break;
+    }
+
+    MiniMap.addBlePoint(
+      mapPoints,
+      clipped.x2,
+      clipped.y2
+    );
 
     if (
       mapPoints.length >=
@@ -2172,7 +2288,6 @@ if (drawn) {
 
   return mapPoints;
 }
-
   static getBearingToNextRoutePoint(
     current,
     routePoints,
