@@ -66,26 +66,25 @@ const MANEUVER_ARROW_MAP = {
 };
 
 const ARROW_LABEL_MAP = {
-  1: "←",
-  2: "→",
-  3: "↑",
-  4: "↖",
-  5: "↗",
-  6: "↰",
-  7: "↱",
-  8: "U",
-  9: "U",
-  10: "M",
-  11: "R↖",
-  12: "R↗",
-  13: "F↖",
-  14: "F↗",
-  15: "RA",
-  16: "RA",
-  17: "🏴",
-  18: "🏁",
-  98: "🏁",
-  99: "?"
+  1: "←", // TURN_LEFT
+  2: "→", // TURN_RIGHT
+  3: "↑", // STRAIGHT
+  4: "↖", // TURN_SLIGHT_LEFT
+  5: "↗", // TURN_SLIGHT_RIGHT
+  6: "↰", // TURN_SHARP_LEFT
+  7: "↱", // TURN_SHARP_RIGHT
+  8: "U", // UTURN_LEFT
+  9: "U", // UTURN_RIGHT
+  10: "M", // MERGE
+  11: "R↖", // RAMP_LEFT
+  12: "R↗", // RAMP_RIGHT
+  13: "F↖", // FORK_LEFT
+  14: "F↗", // FORK_RIGHT
+  15: "RA", // ROUNDABOUT_LEFT
+  16: "RA", // ROUNDABOUT_RIGHT
+  17: "🏴", // DEPART
+  18: "🏁", // DESTINATION
+  99: "?" // others
 };
 
 const RIDE_CONSOLE_MAP_STYLE = [
