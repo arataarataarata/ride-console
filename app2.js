@@ -2420,6 +2420,7 @@ function startBleNaviSender() {
   bleNaviSenderTimer = setInterval(() => {
     sendCurrentNaviToBle();
     sendCurrentMiniMapToBle();
+    sendCurrentGpsSpeedToBle()
   }, BLE_SEND_INTERVAL_MS);
 }
 
