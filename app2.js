@@ -950,57 +950,64 @@ static updateStepDisplay() {
     }
 
     const remainInfo = NavigationManager.getRemainingDistanceToStepEnd(
+  appState.currentLocation,
+  steps[index]
+);
+
+if (!remainInfo) {
+  return;
+}
+
+// 現在有効なStepの残距離情報
+let activeRemainInfo = remainInfo;
+
+if (
+  remainInfo.routeRemain < STEP_ADVANCE_THRESHOLD_METERS &&
+  index < steps.length - 1
+) {
+  const nextStep = steps[index + 1];
+
+  const nextRemainInfo =
+    NavigationManager.getRemainingDistanceToStepEnd(
       appState.currentLocation,
-      steps[index]
+      nextStep
     );
 
-    if (!remainInfo) {
-      return;
-    }
-
-    if (
-      remainInfo.routeRemain < STEP_ADVANCE_THRESHOLD_METERS &&
-      index < steps.length - 1
-      ) {
-      const nextStep = steps[index + 1];
-
-      const nextRemainInfo =
-        NavigationManager.getRemainingDistanceToStepEnd(
-          appState.currentLocation,
-          nextStep
-        );
-
   // 次StepのPolyline付近にいるか
-      const isNearNextStep =
-        nextRemainInfo &&
-        nextRemainInfo.nearestDistance <=
-          STEP_CONFIRM_ROUTE_DISTANCE_METERS;
+  const isNearNextStep =
+    nextRemainInfo &&
+    nextRemainInfo.nearestDistance <=
+      STEP_CONFIRM_ROUTE_DISTANCE_METERS;
 
   // 次Stepを規定距離以上走ったか
-      const hasProgressedOnNextStep =
-        nextRemainInfo &&
-        nextRemainInfo.progressMeters >=
-          STEP_CONFIRM_PROGRESS_METERS;
+  const hasProgressedOnNextStep =
+    nextRemainInfo &&
+    nextRemainInfo.progressMeters >=
+      STEP_CONFIRM_PROGRESS_METERS;
 
   // 次Step上を数m走行して初めてStepを更新
-      if (
-        isNearNextStep &&
-        hasProgressedOnNextStep
-      ) {
-        index += 1;
-        appState.currentStepIndex = index;
+  if (
+    isNearNextStep &&
+    hasProgressedOnNextStep
+  ) {
+    index += 1;
+    appState.currentStepIndex = index;
 
-        appState.currentStepRemainMeters =
-          nextRemainInfo.remainMeters;
-      } else {
+    activeRemainInfo = nextRemainInfo;
+
+    appState.currentStepRemainMeters =
+      activeRemainInfo.remainMeters;
+  } else {
     // 交差点手前・信号待ち中は現在Stepを維持
-        appState.currentStepRemainMeters =
-          remainInfo.remainMeters;
-      }
-    } else {
-      appState.currentStepRemainMeters =
-        remainInfo.remainMeters;
-    }
+    appState.currentStepRemainMeters =
+      remainInfo.remainMeters;
+  }
+} else {
+  appState.currentStepRemainMeters =
+    remainInfo.remainMeters;
+}
+
+
 
 
 
@@ -1016,20 +1023,20 @@ static updateStepDisplay() {
     appState.nextArrow = maneuverToArrow(nextManeuver);
 
     console.table([
-      {
-        currentStepIndex: index,
-        remain: appState.currentStepRemainMeters,
-        routeRemain: remainInfo.routeRemain,
-        directRemain: remainInfo.directRemain,
-        nearestDistance: remainInfo.nearestDistance,
-        nearestIndex: remainInfo.nearestIndex,
-        pointCount: remainInfo.pointCount,
-        currentManeuver,
-        currentArrow: appState.currentArrow,
-        nextManeuver,
-        nextArrow: appState.nextArrow
-      }
-    ]);
+  {
+    currentStepIndex: index,
+    remain: appState.currentStepRemainMeters,
+    routeRemain: activeRemainInfo.routeRemain,
+    directRemain: activeRemainInfo.directRemain,
+    nearestDistance: activeRemainInfo.nearestDistance,
+    nearestIndex: activeRemainInfo.nearestIndex,
+    pointCount: activeRemainInfo.pointCount,
+    currentManeuver,
+    currentArrow: appState.currentArrow,
+    nextManeuver,
+    nextArrow: appState.nextArrow
+  }
+]);
 
     NavigationManager.updateStepDisplay();
     updateDeveloperPanel();
