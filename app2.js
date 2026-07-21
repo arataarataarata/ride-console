@@ -1983,7 +1983,7 @@ static checkWrongWay(
   );
 
   NavigationManager.updateCurrentStep();
-  NavigationManager.updateStepDisplay();
+
 
   MiniMap.draw(
     appState.currentLocation,
