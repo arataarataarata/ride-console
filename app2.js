@@ -20,6 +20,7 @@ const STEP_ADVANCE_THRESHOLD_METERS = 20; // 次Stepを何m進んだら右左折
 const STEP_CONFIRM_PROGRESS_METERS = 8; // 次StepのPolylineから何m以内なら次Step上とみなすか
 const STEP_CONFIRM_ROUTE_DISTANCE_METERS = 15;
 
+const stepPolylineCache = new WeakMap();
 
 const HISTORY_KEY = "rideConsoleDestinationHistory";
 const HISTORY_LIMIT = 10;
@@ -1042,10 +1043,17 @@ if (
     updateDeveloperPanel();
     NavigationManager.checkFinished();
   }
-
-  static getRemainingDistanceToStepEnd(currentLocation, step) {
-    if (!currentLocation || !step?.polyline?.encodedPolyline) {
+  
+  static getStepPolylineCache(step) {
+    if (!step?.polyline?.encodedPolyline) {
       return null;
+    }
+
+    // すでに計算済みなら、そのまま返す
+    const cached = stepPolylineCache.get(step);
+
+    if (cached) {
+      return cached;
     }
 
     const path = google.maps.geometry.encoding.decodePath(
@@ -1055,103 +1063,183 @@ if (
     if (!path || path.length < 2) {
       return null;
     }
-    // StepのPolyline全長
+
+    // 投影計算で使う通常の { lat, lng } 配列
+    const plainPath = path.map(point =>
+      latLngToPlain(point)
+    );
+
+  // 各線分の長さ
+    const segmentLengths = [];
+
     let pathTotalMeters = 0;
 
     for (let i = 0; i < path.length - 1; i++) {
-      pathTotalMeters +=
+      const segmentLength =
         google.maps.geometry.spherical.computeDistanceBetween(
           path[i],
           path[i + 1]
         );
+
+      segmentLengths.push(segmentLength);
+      pathTotalMeters += segmentLength;
     }
 
-    let nearestSegmentIndex = 0;
-    let nearestDistance = Infinity;
-    let projectedPoint = null;
-    let distanceFromProjectionToSegmentEnd = 0;
+    const result = {
+      path,
+      plainPath,
+      segmentLengths,
+      pathTotalMeters
+    };
+
+    stepPolylineCache.set(step, result);
+
+    return result;
+  }
+  static getRemainingDistanceToStepEnd(currentLocation, step) {
+  if (!currentLocation || !step?.polyline?.encodedPolyline) {
+    return null;
+  }
+
+  const cache =
+    NavigationManager.getStepPolylineCache(step);
+
+  if (!cache) {
+    return null;
+  }
+
+  const {
+    path,
+    plainPath,
+    segmentLengths,
+    pathTotalMeters
+  } = cache;
+
+  let nearestSegmentIndex = 0;
+  let nearestDistance = Infinity;
+  let projectedPoint = null;
+  let distanceFromProjectionToSegmentEnd = 0;
 
   // 現在地を各線分に投影して、一番近い線分を探す
-    for (let i = 0; i < path.length - 1; i++) {
-      const a = latLngToPlain(path[i]);
-      const b = latLngToPlain(path[i + 1]);
+  for (let i = 0; i < plainPath.length - 1; i++) {
+    const a = plainPath[i];
+    const b = plainPath[i + 1];
 
-      const projection = NavigationManager.projectPointToSegment(
+    const projection =
+      NavigationManager.projectPointToSegment(
         currentLocation,
         a,
         b
       );
 
-      const d = getDistanceMeters(currentLocation, projection.point);
+    const d = getDistanceMeters(
+      currentLocation,
+      projection.point
+    );
 
-      if (d < nearestDistance) {
-        nearestDistance = d;
-        nearestSegmentIndex = i;
-        projectedPoint = projection.point;
+    if (d < nearestDistance) {
+      nearestDistance = d;
+      nearestSegmentIndex = i;
+      projectedPoint = projection.point;
 
-        distanceFromProjectionToSegmentEnd = getDistanceMeters(
+      distanceFromProjectionToSegmentEnd =
+        getDistanceMeters(
           projection.point,
           b
         );
-      }
     }
-
-    if (!projectedPoint) {
-      return null;
-    }
-
-  // 投影点 → 線分終点
-    let routeRemain = distanceFromProjectionToSegmentEnd;
-
-  // その後の線分を加算
-    for (let i = nearestSegmentIndex + 1; i < path.length - 1; i++) {
-      routeRemain += google.maps.geometry.spherical.computeDistanceBetween(
-        path[i],
-        path[i + 1]
-      );
-    }
-    const progressMeters = Math.max(
-      0,
-      pathTotalMeters - routeRemain
-    );
-    const startPoint = latLngToPlain(path[0]);
-    const endPoint = latLngToPlain(path[path.length - 1]);
-
-    const distanceToPathStart = getDistanceMeters(currentLocation, startPoint);
-    const distanceToPathEnd = getDistanceMeters(currentLocation, endPoint);
-
-    const remainMeters = routeRemain;
-
-    appState.navDebug = {
-      stepIndex: appState.currentStepIndex,
-      nearestIndex: nearestSegmentIndex,
-      nearestSegmentIndex,
-      pointCount: path.length,
-      pathTotalMeters: Math.round(pathTotalMeters),
-      progressMeters: Math.round(progressMeters),
-      remainMeters: Math.round(remainMeters),
-      routeRemain: Math.round(routeRemain),
-      directRemain: Math.round(nearestDistance),
-      nearestDistance: Math.round(nearestDistance),
-      distanceToPathStart: Math.round(distanceToPathStart),
-      distanceToPathEnd: Math.round(distanceToPathEnd)
-    };
-
-    return {
-      remainMeters: Math.round(remainMeters),
-      routeRemain: Math.round(routeRemain),
-      directRemain: Math.round(nearestDistance),
-      nearestDistance: Math.round(nearestDistance),
-      nearestIndex: nearestSegmentIndex,
-      nearestSegmentIndex,
-      pointCount: path.length,
-      pathTotalMeters: Math.round(pathTotalMeters),
-      progressMeters: Math.round(progressMeters),
-      distanceToPathStart: Math.round(distanceToPathStart),
-      distanceToPathEnd: Math.round(distanceToPathEnd)
-    };
-    
   }
+
+  if (!projectedPoint) {
+    return null;
+  }
+
+  // 投影点 → 現在線分の終点
+  let routeRemain =
+    distanceFromProjectionToSegmentEnd;
+
+  // 現在線分より後ろの線分長を加算
+  for (
+    let i = nearestSegmentIndex + 1;
+    i < segmentLengths.length;
+    i++
+  ) {
+    routeRemain += segmentLengths[i];
+  }
+
+  const progressMeters = Math.max(
+    0,
+    pathTotalMeters - routeRemain
+  );
+
+  const startPoint = plainPath[0];
+  const endPoint =
+    plainPath[plainPath.length - 1];
+
+  const distanceToPathStart =
+    getDistanceMeters(
+      currentLocation,
+      startPoint
+    );
+
+  const distanceToPathEnd =
+    getDistanceMeters(
+      currentLocation,
+      endPoint
+    );
+
+  const remainMeters = routeRemain;
+
+  appState.navDebug = {
+    stepIndex: appState.currentStepIndex,
+    nearestIndex: nearestSegmentIndex,
+    nearestSegmentIndex,
+    pointCount: path.length,
+    pathTotalMeters:
+      Math.round(pathTotalMeters),
+    progressMeters:
+      Math.round(progressMeters),
+    remainMeters:
+      Math.round(remainMeters),
+    routeRemain:
+      Math.round(routeRemain),
+    directRemain:
+      Math.round(nearestDistance),
+    nearestDistance:
+      Math.round(nearestDistance),
+    distanceToPathStart:
+      Math.round(distanceToPathStart),
+    distanceToPathEnd:
+      Math.round(distanceToPathEnd)
+  };
+
+  return {
+    remainMeters:
+      Math.round(remainMeters),
+    routeRemain:
+      Math.round(routeRemain),
+    directRemain:
+      Math.round(nearestDistance),
+    nearestDistance:
+      Math.round(nearestDistance),
+    nearestIndex:
+      nearestSegmentIndex,
+    nearestSegmentIndex,
+    pointCount:
+      path.length,
+    pathTotalMeters:
+      Math.round(pathTotalMeters),
+    progressMeters:
+      Math.round(progressMeters),
+    distanceToPathStart:
+      Math.round(distanceToPathStart),
+    distanceToPathEnd:
+      Math.round(distanceToPathEnd)
+  };
+}
+
+
+  
   static projectPointToSegment(p, a, b) {
     const latScale = 111320;
     const lngScale = 111320 * Math.cos((p.lat * Math.PI) / 180);
